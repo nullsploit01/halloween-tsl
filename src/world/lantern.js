@@ -4,13 +4,11 @@ import * as THREE from 'three/webgpu'
 const gltfLoader = new GLTFLoader()
 
 
-export const addLantern = async (scene) => {
-    const model = await gltfLoader.loadAsync('./models/lantern.glb')
-    const lantern = model.scene
+export async function addLantern(camera) {
+    const gltf = await gltfLoader.loadAsync('./models/lantern.glb')
+    const lantern = gltf.scene
 
     lantern.scale.setScalar(0.01)
-    lantern.position.y = 3
-    lantern.rotation.y = -Math.PI * 0.5
 
     lantern.traverse((child) => {
         if (child.isMesh) {
@@ -19,40 +17,14 @@ export const addLantern = async (scene) => {
         }
     })
 
-    scene.add(lantern)
+    // Adding it to the camera makes it a held lantern.
+    camera.add(lantern)
 
-    const pressedKeys = new Set()
-    const moveSpeed = 3
+    // Local position: right/left, up/down, forward/back from the camera.
+    lantern.position.set(0.45, -0.65, -1.5)
 
-    const onKeyDown = (event) => pressedKeys.add(event.code)
-    const onKeyUp = (event) => pressedKeys.delete(event.code)
-    const clearKeys = () => pressedKeys.clear()
+    // Keep your model-specific correction.
+    lantern.rotation.set(0, -Math.PI * 0.5, 0)
 
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
-    window.addEventListener('blur', clearKeys)
-
-    return {
-        lantern,
-
-        update(deltaTime) {
-            const direction = new THREE.Vector3(
-                Number(pressedKeys.has('KeyD')) - Number(pressedKeys.has('KeyA')),
-                0,
-                Number(pressedKeys.has('KeyS')) - Number(pressedKeys.has('KeyW'))
-            )
-
-            if (direction.lengthSq() > 0) {
-                direction.normalize()
-                lantern.position.addScaledVector(direction, moveSpeed * deltaTime)
-            }
-        },
-
-        destroy() {
-            window.removeEventListener('keydown', onKeyDown)
-            window.removeEventListener('keyup', onKeyUp)
-            window.removeEventListener('blur', clearKeys)
-            scene.remove(lantern)
-        }
-    }
+    return lantern
 }
