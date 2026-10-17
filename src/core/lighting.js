@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 
-export function addLighting({ scene, inspector }) {
+export function addLighting({ scene, renderer }) {
   const directionalLight = new THREE.DirectionalLight(0xff9147, 9.2);
   directionalLight.castShadow = true;
   directionalLight.position.set(2, 1.1, -1.75).normalize().multiplyScalar(10);
@@ -18,7 +18,7 @@ export function addLighting({ scene, inspector }) {
 
   scene.add(directionalLight, ambientLight);
 
-  const lightsGui = inspector.createParameters('Lights').close();
+  const lightsGui = renderer.inspector.createParameters('Lights').close();
   lightsGui.addColor(directionalLight, 'color').name('directionalColor');
   lightsGui.add(directionalLight.position, 'y', 0, 10, 0.01).name('directionalY');
   lightsGui.add(directionalLight, 'intensity', 0, 10, 0.01).name('directionalIntensity');
