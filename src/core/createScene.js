@@ -1,5 +1,5 @@
-import * as THREE from 'three/webgpu'
+import * as THREE from 'three/webgpu';
 
 export function createScene() {
-    return new THREE.Scene()
+  return new THREE.Scene();
 }
