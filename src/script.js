@@ -15,6 +15,8 @@ const sizes = new Sizes()
 const scene = createScene()
 const camera = createCamera(sizes)
 
+scene.add(camera)
+
 // Player height, rather than the former scene-preview camera position.
 camera.position.set(0, 1.7, 0)
 
