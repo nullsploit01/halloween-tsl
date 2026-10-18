@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 
 export function addLighting({ scene, renderer }) {
-  const directionalLight = new THREE.DirectionalLight(0xff9147, 0.3);
+  const directionalLight = new THREE.DirectionalLight(0xff9147, 0);
   directionalLight.castShadow = true;
   directionalLight.position.set(2, 1.1, -1.75).normalize().multiplyScalar(10);
 
@@ -14,7 +14,7 @@ export function addLighting({ scene, renderer }) {
   directionalLight.shadow.radius = 5;
   directionalLight.shadow.normalBias = 0.1;
 
-  const ambientLight = new THREE.AmbientLight(0xb870ff, 2.5);
+  const ambientLight = new THREE.AmbientLight(0xb870ff, 0.1);
 
   scene.add(directionalLight, ambientLight);
 

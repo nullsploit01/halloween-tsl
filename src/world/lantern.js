@@ -21,9 +21,9 @@ export async function addLantern(camera) {
 
     const lanternLight = new THREE.PointLight(
         0xff9a45,
-        18,       
-        12,       
-        2         
+        3.5,       
+        10,       
+        2    
     )
 
     lanternLight.position.set(10, 10.35, -30)

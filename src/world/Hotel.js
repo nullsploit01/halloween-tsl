@@ -18,7 +18,20 @@ wallColorTexture.repeat.set(4, 2)
 wallNormalTexture.wrapS = wallNormalTexture.wrapT = THREE.RepeatWrapping
 wallNormalTexture.repeat.set(4, 2)
 
-for (const texture of [wallColorTexture, wallNormalTexture]) {
+const floorColorTexture = await textureLoader.loadAsync(
+    './textures/old_wooden_floor_02_1k/old_wooden_floor_02_diff_1k.png'
+)
+
+const floorNormalTexture = await textureLoader.loadAsync(
+    './textures/old_wooden_floor_02_1k/old_wooden_floor_02_nor_gl_1k.png'
+)
+
+floorColorTexture.colorSpace = THREE.SRGBColorSpace
+
+floorColorTexture.repeat.set(0.25, 0.25)
+floorNormalTexture.repeat.set(0.25, 0.25)
+
+for (const texture of [wallColorTexture, wallNormalTexture, floorColorTexture, floorNormalTexture]) {
     texture.wrapS = THREE.RepeatWrapping
     texture.wrapT = THREE.RepeatWrapping
 }
@@ -65,6 +78,23 @@ function createBoxWall({ length, height, thickness, axis, material }) {
     return wall
 }
 
+function createTiledFloorGeometry(width, thickness, length, tileSize = 2) {
+    const geometry = new THREE.BoxGeometry(width, thickness, length)
+    const uvs = geometry.attributes.uv
+
+    for (let i = 0; i < uvs.count; i++) {
+        uvs.setXY(
+            i,
+            uvs.getX(i) * (width / tileSize),
+            uvs.getY(i) * (length / tileSize)
+        )
+    }
+
+    uvs.needsUpdate = true
+
+    return geometry
+}
+
 export class Hotel {
     constructor(scene, options = {}) {
         this.scene = scene
@@ -81,7 +111,9 @@ export class Hotel {
 
         this.floorMaterial = new THREE.MeshStandardNodeMaterial({
             color: 0x1a1718,
-            roughness: 0.95
+            roughness: 0.95,
+            map: floorColorTexture,
+            normalMap: floorNormalTexture
         })
 
         this.ceilingMaterial = new THREE.MeshStandardNodeMaterial({
@@ -281,7 +313,7 @@ export class Hotel {
 
     addJunctionFloor(node) {
         const floor = new THREE.Mesh(
-            new THREE.BoxGeometry(
+            createTiledFloorGeometry(
                 this.hallwayWidth,
                 this.floorThickness,
                 this.hallwayWidth
@@ -357,7 +389,7 @@ export class Hotel {
         group.position.multiplyScalar(0.5)
 
         const floor = new THREE.Mesh(
-            new THREE.BoxGeometry(
+            createTiledFloorGeometry(
                 isVertical ? this.hallwayWidth : corridorLength,
                 this.floorThickness,
                 isVertical ? corridorLength : this.hallwayWidth
