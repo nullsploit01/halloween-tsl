@@ -29,7 +29,7 @@ const postProcessing = createPostProcessing({
     camera
 })
 
-addLighting({ scene, renderer })
+const {ambientLight} = addLighting({ scene, renderer })
 
 const { lantern, hotel, lanternLight } = await addWorld(scene, camera)
 
@@ -47,7 +47,7 @@ sizes.onResize(() => {
 
 const nightVisionLight = new THREE.SpotLight(
     0xb8ffb5,
-    25,
+    45,
     20,
     Math.PI * 0.25,
     0.5,
@@ -63,17 +63,59 @@ camera.add(nightVisionLight.target)
 
 let nightVisionEnabled = false
 
+const normalAmbientIntensity = ambientLight.intensity
+let ambientStartTimeout
+let ambientResetTimeout
+
+function setNightVision(enabled) {
+    nightVisionEnabled = enabled
+
+    postProcessing.setNightVision(enabled)
+    nightVisionLight.visible = enabled
+
+    lantern.visible = !enabled
+    lanternLight.visible = !enabled
+}
+
+function stopSobelEvent() {
+    clearTimeout(ambientStartTimeout)
+    clearTimeout(ambientResetTimeout)
+
+    ambientLight.intensity = normalAmbientIntensity
+    postProcessing.setSobel(false)
+}
+
 window.addEventListener('keydown', (event) => {
-    if (event.code !== 'KeyF' || event.repeat) return
+    if (event.repeat) return
 
-    nightVisionEnabled = !nightVisionEnabled
+    if (event.code === 'KeyF') {
+        const nextNightVisionState = !nightVisionEnabled
 
-    postProcessing.setNightVision(nightVisionEnabled)
-    nightVisionLight.visible = nightVisionEnabled
+        // Enabling night vision cancels the Sobel event.
+        if (nextNightVisionState) {
+            stopSobelEvent()
+        }
 
-    // Optional: night vision replaces the lantern's usefulness.
-    lantern.visible = !nightVisionEnabled
-    lanternLight.visible = !nightVisionEnabled
+        setNightVision(nextNightVisionState)
+    }
+
+    if (event.code === 'KeyG') {
+        // Sobel event always exits night vision first.
+        setNightVision(false)
+
+        postProcessing.triggerSobel(3)
+
+        clearTimeout(ambientStartTimeout)
+        clearTimeout(ambientResetTimeout)
+
+        ambientStartTimeout = setTimeout(() => {
+            ambientLight.intensity = 8
+        }, 300)
+
+        ambientResetTimeout = setTimeout(() => {
+            ambientLight.intensity = normalAmbientIntensity
+        }, 3000)
+    }
 })
 
 const keys = new Set()
@@ -98,6 +140,7 @@ function tick() {
 
     hotel.update(camera.position)
 
+    postProcessing.update(deltaTime)
     postProcessing.renderPipeline.render()
 }
 
