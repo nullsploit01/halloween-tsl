@@ -1,5 +1,28 @@
 import * as THREE from 'three/webgpu'
 
+const textureLoader = new THREE.TextureLoader()
+
+const wallColorTexture = await textureLoader.loadAsync(
+    './textures/concrete_slab_wall_1k/concrete_slab_wall_diff_1k.png'
+)
+
+const wallNormalTexture = await textureLoader.loadAsync(
+    './textures/concrete_slab_wall_1k/concrete_slab_wall_nor_gl_1k.png'
+)
+
+wallColorTexture.colorSpace = THREE.SRGBColorSpace
+
+wallColorTexture.wrapS = wallColorTexture.wrapT = THREE.RepeatWrapping
+wallColorTexture.repeat.set(4, 2)
+
+wallNormalTexture.wrapS = wallNormalTexture.wrapT = THREE.RepeatWrapping
+wallNormalTexture.repeat.set(4, 2)
+
+for (const texture of [wallColorTexture, wallNormalTexture]) {
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+}
+
 const DIRECTIONS = {
     north: { x: 0, z: -1 },
     east: { x: 1, z: 0 },
@@ -69,7 +92,10 @@ export class Hotel {
         })
 
         this.wallMaterial = new THREE.MeshStandardNodeMaterial({
-            color: 0x30272a,
+            color: 0xffffff,
+            map: wallColorTexture,
+            normalMap: wallNormalTexture,
+            normalScale: new THREE.Vector2(0.5, 0.5),
             roughness: 0.9
         })
 
