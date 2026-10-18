@@ -46,6 +46,7 @@ export class Hotel {
     constructor(scene, options = {}) {
         this.scene = scene
 
+        this.ceilingThickness = 0.15
         this.hallwayWidth = options.hallwayWidth ?? 6
         this.hallwayHeight = options.hallwayHeight ?? 3
         this.hallwayLength = options.hallwayLength ?? 22
@@ -60,6 +61,13 @@ export class Hotel {
             roughness: 0.95
         })
 
+        this.ceilingMaterial = new THREE.MeshStandardNodeMaterial({
+            color: 0x1a1718,
+            emissive: 0x1a1718,
+            emissiveIntensity: 0.35,
+            roughness: 0.95
+        })
+
         this.wallMaterial = new THREE.MeshStandardNodeMaterial({
             color: 0x30272a,
             roughness: 0.9
@@ -70,6 +78,25 @@ export class Hotel {
 
         // Nothing is open until the player reaches this first junction.
         this.createNode(0, 0, null, 0)
+    }
+
+    addCeiling(parent, width, length) {
+        const ceiling = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                width,
+                this.ceilingThickness,
+                length
+            ),
+            this.ceilingMaterial
+        )
+
+        // Walls run from Y = 0 to Y = hallwayHeight.
+        ceiling.position.y =
+            this.hallwayHeight + this.ceilingThickness * 0.5
+
+        ceiling.receiveShadow = true
+
+        parent.add(ceiling)
     }
 
     update(playerPosition) {
@@ -241,6 +268,12 @@ export class Hotel {
         floor.receiveShadow = true
 
         node.group.add(floor)
+
+        this.addCeiling(
+            node.group,
+            this.hallwayWidth,
+            this.hallwayWidth
+        )
     }
 
     addJunctionWall(node, direction) {
@@ -309,6 +342,12 @@ export class Hotel {
         floor.position.y = -this.floorThickness * 0.5
         floor.receiveShadow = true
         group.add(floor)
+
+        this.addCeiling(
+            group,
+            isVertical ? this.hallwayWidth : corridorLength,
+            isVertical ? corridorLength : this.hallwayWidth
+        )
 
         for (const side of [-1, 1]) {
             const wall = this.wallFactory({
