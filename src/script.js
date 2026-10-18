@@ -23,7 +23,12 @@ camera.position.set(0, 1.7, 0)
 const renderer = await createRenderer(canvas, sizes)
 const controls = new PointerLockControls(camera, document.body)
 
-createPostProcessing({ renderer, scene, camera })
+const postProcessing = createPostProcessing({
+    renderer,
+    scene,
+    camera
+})
+
 addLighting({ scene, renderer })
 
 const { hotel } = await addWorld(scene, camera)
@@ -38,6 +43,36 @@ sizes.onResize(() => {
 
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(sizes.pixelRatio)
+})
+
+const nightVisionLight = new THREE.SpotLight(
+    0xb8ffb5,
+    25,
+    20,
+    Math.PI * 0.25,
+    0.5,
+    2
+)
+
+nightVisionLight.visible = false
+
+camera.add(nightVisionLight)
+
+nightVisionLight.target.position.set(0, 0, -10)
+camera.add(nightVisionLight.target)
+
+let nightVisionEnabled = false
+
+window.addEventListener('keydown', (event) => {
+    if (event.code !== 'KeyF' || event.repeat) return
+
+    nightVisionEnabled = !nightVisionEnabled
+
+    postProcessing.setNightVision(nightVisionEnabled)
+    nightVisionLight.visible = nightVisionEnabled
+
+    // Optional: night vision replaces the lantern's usefulness.
+    lantern.visible = !nightVisionEnabled
 })
 
 const keys = new Set()
@@ -62,7 +97,7 @@ function tick() {
 
     hotel.update(camera.position)
 
-    renderer.render(scene, camera)
+    postProcessing.renderPipeline.render()
 }
 
 renderer.setAnimationLoop(tick)
