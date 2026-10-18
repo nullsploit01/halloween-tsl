@@ -4,7 +4,7 @@ import { Hotel } from './Hotel.js'
 
 export const addWorld = async (scene, camera) => {
     const hotel = new Hotel(scene);
-    const lantern = await addLantern(camera, scene);
+    const {lantern, lanternLight} = await addLantern(camera, scene);
 
-    return { lantern, hotel };
+    return { lantern, lanternLight, hotel };
 }

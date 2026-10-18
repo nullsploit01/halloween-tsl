@@ -31,7 +31,7 @@ const postProcessing = createPostProcessing({
 
 addLighting({ scene, renderer })
 
-const { lantern, hotel } = await addWorld(scene, camera)
+const { lantern, hotel, lanternLight } = await addWorld(scene, camera)
 
 canvas.addEventListener('click', () => {
     controls.lock()
@@ -73,6 +73,7 @@ window.addEventListener('keydown', (event) => {
 
     // Optional: night vision replaces the lantern's usefulness.
     lantern.visible = !nightVisionEnabled
+    lanternLight.visible = !nightVisionEnabled
 })
 
 const keys = new Set()

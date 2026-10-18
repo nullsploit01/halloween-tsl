@@ -8,7 +8,7 @@ export async function addLantern(camera) {
     const gltf = await gltfLoader.loadAsync('./models/lantern.glb')
     const lantern = gltf.scene
 
-    lantern.scale.setScalar(0.01)
+    lantern.scale.setScalar(0.005)
 
     lantern.traverse((child) => {
         if (child.isMesh) {
@@ -17,8 +17,21 @@ export async function addLantern(camera) {
         }
     })
 
-    // Adding it to the camera makes it a held lantern.
     camera.add(lantern)
+
+    const lanternLight = new THREE.PointLight(
+        0xff9a45,
+        18,       
+        12,       
+        2         
+    )
+
+    lanternLight.position.set(10, 10.35, -30)
+
+    lanternLight.castShadow = true
+    lanternLight.shadow.mapSize.set(512, 512)
+
+    lantern.add(lanternLight)
 
     // Local position: right/left, up/down, forward/back from the camera.
     lantern.position.set(0.45, -0.55, -1.6)
@@ -26,5 +39,5 @@ export async function addLantern(camera) {
     // Keep your model-specific correction.
     lantern.rotation.set(0, -Math.PI * 0.5, 0)
 
-    return lantern
+    return {lantern, lanternLight}
 }
