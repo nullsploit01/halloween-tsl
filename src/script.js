@@ -8,12 +8,14 @@ import { createScene } from './core/createScene.js'
 import { addLighting } from './core/lighting.js'
 import { Sizes } from './core/Sizes.js'
 import { addWorld } from './world/addWorld.js'
+import { createCameraHud } from './ui/createCameraHud.js';
 
 const canvas = document.querySelector('canvas.threejs')
 
 const sizes = new Sizes()
 const scene = createScene()
 const camera = createCamera(sizes)
+const cameraHud = createCameraHud()
 
 scene.add(camera)
 
@@ -75,6 +77,7 @@ function setNightVision(enabled) {
 
     lantern.visible = !enabled
     lanternLight.visible = !enabled
+    cameraHud.setVisible(enabled)
 }
 
 function stopSobelEvent() {
@@ -138,6 +141,7 @@ function tick() {
         if (keys.has('KeyD')) controls.moveRight(moveSpeed * deltaTime)
     }
 
+    cameraHud.update(deltaTime)
     hotel.update(camera.position)
 
     postProcessing.update(deltaTime)

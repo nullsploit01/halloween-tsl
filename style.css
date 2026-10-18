@@ -14,3 +14,60 @@ body {
   left: 0;
   outline: none;
 }
+
+.camera-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  display: none;
+  padding: 34px;
+  color: #a8ff9a;
+  font-family: monospace;
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 8px #4cff45;
+}
+
+.camera-hud.is-visible {
+  display: block;
+}
+
+.camera-hud__clock {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.camera-hud__top,
+.camera-hud__bottom {
+  display: flex;
+  justify-content: space-between;
+}
+
+.camera-hud__bottom {
+  position: absolute;
+  right: 34px;
+  bottom: 34px;
+}
+
+.camera-hud__rec i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #ff3b3b;
+  animation: record-blink 1s steps(2, start) infinite;
+}
+
+.camera-hud__status {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@keyframes record-blink {
+  50% {
+    opacity: 0;
+  }
+}
