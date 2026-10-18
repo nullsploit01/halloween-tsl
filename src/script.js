@@ -31,7 +31,7 @@ const postProcessing = createPostProcessing({
 
 addLighting({ scene, renderer })
 
-const { hotel } = await addWorld(scene, camera)
+const { lantern, hotel } = await addWorld(scene, camera)
 
 canvas.addEventListener('click', () => {
     controls.lock()
