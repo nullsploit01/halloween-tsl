@@ -13,6 +13,13 @@ export class Stalker {
     this.marker = null;
     this.hasSpawned = false;
     this.isChasing = false;
+
+    this.mixer = null
+    this.actions = {}
+    this.currentAction = null
+
+    this.patrolSpeed = 0.7
+    this.patrolDirection = new THREE.Vector3()
   }
 
   async load() {
@@ -55,6 +62,14 @@ export class Stalker {
     this.model.add(visual);
     this.model.visible = false;
 
+    this.mixer = new THREE.AnimationMixer(visual)
+
+    for (const clip of gltf.animations) {
+        this.actions[clip.name] = this.mixer.clipAction(clip)
+    }
+
+    this.playAnimation('Walk_calm')
+
     this.scene.add(this.model);
 
     this.marker = new THREE.Mesh(
@@ -73,6 +88,25 @@ export class Stalker {
     this.scene.add(this.marker);
   }
 
+  playAnimation(name, fadeDuration = 0.25) {
+        const nextAction = this.actions[name]
+
+        if (!nextAction || nextAction === this.currentAction) return
+
+        nextAction
+            .reset()
+            .setEffectiveTimeScale(1)
+            .setEffectiveWeight(1)
+            .fadeIn(fadeDuration)
+            .play()
+
+        if (this.currentAction) {
+            this.currentAction.fadeOut(fadeDuration)
+        }
+
+        this.currentAction = nextAction
+    }
+
   trySpawn(hotel, playerPosition) {
     // There can only ever be one spawn.
     if (this.hasSpawned || !this.model) return;
@@ -88,29 +122,64 @@ export class Stalker {
     this.marker.visible = true;
     this.model.visible = true;
     this.hasSpawned = true;
+
+    const directions = [
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(-1, 0, 0),
+        new THREE.Vector3(0, 0, 1),
+        new THREE.Vector3(0, 0, -1)
+    ]
+
+    this.patrolDirection.copy(
+        directions[Math.floor(Math.random() * directions.length)]
+    )
   }
 
   update(playerPosition, deltaTime) {
-    if (!this.model || !this.hasSpawned) return;
+        if (!this.model || !this.hasSpawned) return
 
-    const distance = this.model.position.distanceTo(playerPosition);
+        this.mixer.update(deltaTime)
 
-    this.isChasing = distance < this.agroDistance;
+        const distance = this.model.position.distanceTo(playerPosition)
+        this.isChasing = distance < this.agroDistance
 
-    if (!this.isChasing) return;
+        if (this.isChasing) {
+            this.playAnimation('WalkFast')
 
-    const direction = new THREE.Vector3().subVectors(playerPosition, this.model.position);
+            const direction = new THREE.Vector3()
+                .subVectors(playerPosition, this.model.position)
 
-    direction.y = 0;
-    direction.normalize();
+            direction.y = 0
+            direction.normalize()
 
-    this.model.position.addScaledVector(direction, this.chaseSpeed * deltaTime);
+            this.model.position.addScaledVector(
+                direction,
+                this.chaseSpeed * deltaTime
+            )
 
-    this.marker.position.copy(this.model.position);
-    this.marker.position.y = 0.02;
+            this.model.lookAt(
+                playerPosition.x,
+                this.model.position.y,
+                playerPosition.z
+            )
+        } else {
+            this.playAnimation('Walk_calm')
 
-    this.model.lookAt(playerPosition.x, this.model.position.y, playerPosition.z);
-  }
+            this.model.position.addScaledVector(
+                this.patrolDirection,
+                this.patrolSpeed * deltaTime
+            )
+
+            const lookTarget = this.model.position
+                .clone()
+                .add(this.patrolDirection)
+
+            this.model.lookAt(lookTarget)
+        }
+
+        this.marker.position.copy(this.model.position)
+        this.marker.position.y = 0.02
+    }
 
   despawn() {
     if (!this.model) return;
