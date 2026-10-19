@@ -1,89 +1,70 @@
-import * as THREE from 'three/webgpu'
-import { bloom } from 'three/addons/tsl/display/BloomNode.js'
-import { film } from 'three/addons/tsl/display/FilmNode.js'
-import { sobel } from 'three/addons/tsl/display/SobelOperatorNode.js'
-
-import {
-    pass,
-    uniform,
-    vec3,
-    mix,
-    grayscale
-} from 'three/tsl'
+import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { film } from 'three/addons/tsl/display/FilmNode.js';
+import { sobel } from 'three/addons/tsl/display/SobelOperatorNode.js';
+import { grayscale, mix, pass, uniform, vec3 } from 'three/tsl';
+import * as THREE from 'three/webgpu';
 
 export function createPostProcessing({ renderer, scene, camera }) {
-    const renderPipeline = new THREE.RenderPipeline(renderer)
+  const renderPipeline = new THREE.RenderPipeline(renderer);
 
-    const scenePass = pass(scene, camera)
-    const sceneColor = scenePass.getTextureNode('output')
+  const scenePass = pass(scene, camera);
+  const sceneColor = scenePass.getTextureNode('output');
 
-    const bloomPass = bloom(sceneColor)
-    bloomPass.threshold.value = 0
-    bloomPass.strength.value = 0.08
-    
-    const normalView = sceneColor.add(bloomPass)
+  const bloomPass = bloom(sceneColor);
+  bloomPass.threshold.value = 0;
+  bloomPass.strength.value = 0.08;
 
-    const sobelAmount = uniform(0)
-    let sobelTarget = 0
-    let sobelReleaseAt = 0
+  const normalView = sceneColor.add(bloomPass);
 
-    const sobelView = sobel(sceneColor)
+  const sobelAmount = uniform(0);
+  let sobelTarget = 0;
+  let sobelReleaseAt = 0;
 
-    const normalToSobel = mix(
-        normalView,
-        sobelView,
-        sobelAmount
-    )
+  const sobelView = sobel(sceneColor);
 
-    const nightVisionEnabled = uniform(0)
-    const grainIntensity = uniform(0)
+  const normalToSobel = mix(normalView, sobelView, sobelAmount);
 
-    const nightVisionColor = grayscale(normalView.rgb)
-        .mul(vec3(0.12, 1.15, 0.2))
-        .mul(1.5)
+  const nightVisionEnabled = uniform(0);
+  const grainIntensity = uniform(0);
 
-    const nightVisionView = film(
-        nightVisionColor,
-        grainIntensity
-    )
+  const nightVisionColor = grayscale(normalView.rgb)
+    .mul(vec3(0.12, 1.15, 0.2))
+    .mul(1.5);
 
-    renderPipeline.outputNode = mix(
-        normalToSobel,
-        nightVisionView,
-        nightVisionEnabled
-    )
+  const nightVisionView = film(nightVisionColor, grainIntensity);
 
-    return {
-        renderPipeline,
+  renderPipeline.outputNode = mix(normalToSobel, nightVisionView, nightVisionEnabled);
 
-        setSobel(enabled) {
-            sobelTarget = enabled ? 1 : 0
-            sobelReleaseAt = 0
-        },
+  return {
+    renderPipeline,
 
-        triggerSobel(duration = 0.8) {
-            sobelTarget = 1
-            sobelReleaseAt = performance.now() * 0.001 + duration
-        },
+    setSobel(enabled) {
+      sobelTarget = enabled ? 1 : 0;
+      sobelReleaseAt = 0;
+    },
 
-        setNightVision(enabled) {
-            nightVisionEnabled.value = enabled ? 1 : 0
-            grainIntensity.value = enabled ? 0.22 : 0
-        },
+    triggerSobel(duration = 0.8) {
+      sobelTarget = 1;
+      sobelReleaseAt = performance.now() * 0.001 + duration;
+    },
 
-        update(deltaTime) {
-            const now = performance.now() * 0.001
+    setNightVision(enabled) {
+      nightVisionEnabled.value = enabled ? 1 : 0;
+      grainIntensity.value = enabled ? 0.22 : 0;
+    },
 
-            if (sobelReleaseAt !== 0 && now >= sobelReleaseAt) {
-                sobelTarget = 0
-                sobelReleaseAt = 0
-            }
+    update(deltaTime) {
+      const now = performance.now() * 0.001;
 
-            const transitionSpeed = 7
+      if (sobelReleaseAt !== 0 && now >= sobelReleaseAt) {
+        sobelTarget = 0;
+        sobelReleaseAt = 0;
+      }
 
-            sobelAmount.value +=
-                (sobelTarget - sobelAmount.value) *
-                (1 - Math.exp(-transitionSpeed * deltaTime))
-        }
-    }
+      const transitionSpeed = 7;
+
+      sobelAmount.value +=
+        (sobelTarget - sobelAmount.value) * (1 - Math.exp(-transitionSpeed * deltaTime));
+    },
+  };
 }

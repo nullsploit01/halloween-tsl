@@ -14,7 +14,7 @@ export function addLighting({ scene, renderer }) {
   directionalLight.shadow.radius = 5;
   directionalLight.shadow.normalBias = 0.1;
 
-  const ambientLight = new THREE.AmbientLight(0xb870ff, 0.1);
+  const ambientLight = new THREE.AmbientLight(0xb870ff, 10);
 
   scene.add(directionalLight, ambientLight);
 
