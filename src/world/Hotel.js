@@ -3,11 +3,11 @@ import * as THREE from 'three/webgpu';
 const textureLoader = new THREE.TextureLoader();
 
 const wallColorTexture = await textureLoader.loadAsync(
-  './textures/concrete_slab_wall_1k/concrete_slab_wall_diff_1k.png',
+    './textures/concrete_slab_wall_1k/concrete_slab_wall_diff_1k.png',
 );
 
 const wallNormalTexture = await textureLoader.loadAsync(
-  './textures/concrete_slab_wall_1k/concrete_slab_wall_nor_gl_1k.png',
+    './textures/concrete_slab_wall_1k/concrete_slab_wall_nor_gl_1k.png',
 );
 
 wallColorTexture.colorSpace = THREE.SRGBColorSpace;
@@ -19,11 +19,11 @@ wallNormalTexture.wrapS = wallNormalTexture.wrapT = THREE.RepeatWrapping;
 wallNormalTexture.repeat.set(4, 2);
 
 const floorColorTexture = await textureLoader.loadAsync(
-  './textures/old_wooden_floor_02_1k/old_wooden_floor_02_diff_1k.png',
+    './textures/old_wooden_floor_02_1k/old_wooden_floor_02_diff_1k.png',
 );
 
 const floorNormalTexture = await textureLoader.loadAsync(
-  './textures/old_wooden_floor_02_1k/old_wooden_floor_02_nor_gl_1k.png',
+    './textures/old_wooden_floor_02_1k/old_wooden_floor_02_nor_gl_1k.png',
 );
 
 floorColorTexture.colorSpace = THREE.SRGBColorSpace;
@@ -32,372 +32,443 @@ floorColorTexture.repeat.set(0.25, 0.25);
 floorNormalTexture.repeat.set(0.25, 0.25);
 
 for (const texture of [
-  wallColorTexture,
-  wallNormalTexture,
-  floorColorTexture,
-  floorNormalTexture,
+    wallColorTexture,
+    wallNormalTexture,
+    floorColorTexture,
+    floorNormalTexture,
 ]) {
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
 }
 
 const DIRECTIONS = {
-  north: { x: 0, z: -1 },
-  east: { x: 1, z: 0 },
-  south: { x: 0, z: 1 },
-  west: { x: -1, z: 0 },
+    north: { x: 0, z: -1 },
+    east: { x: 1, z: 0 },
+    south: { x: 0, z: 1 },
+    west: { x: -1, z: 0 },
 };
 
 const DIRECTION_NAMES = ['north', 'east', 'south', 'west'];
 
 function opposite(direction) {
-  const index = DIRECTION_NAMES.indexOf(direction);
+    const index = DIRECTION_NAMES.indexOf(direction);
 
-  return DIRECTION_NAMES[(index + 2) % 4];
+    return DIRECTION_NAMES[(index + 2) % 4];
 }
 
 function relativeDirection(forward, relative) {
-  const index = DIRECTION_NAMES.indexOf(forward);
+    const index = DIRECTION_NAMES.indexOf(forward);
 
-  if (relative === 'left') {
-    return DIRECTION_NAMES[(index + 3) % 4];
-  }
+    if (relative === 'left') {
+        return DIRECTION_NAMES[(index + 3) % 4];
+    }
 
-  if (relative === 'right') {
-    return DIRECTION_NAMES[(index + 1) % 4];
-  }
+    if (relative === 'right') {
+        return DIRECTION_NAMES[(index + 1) % 4];
+    }
 
-  return forward;
+    return forward;
 }
 
 function createBoxWall({ length, height, thickness, axis, material }) {
-  const geometry =
-    axis === 'x'
-      ? new THREE.BoxGeometry(length, height, thickness)
-      : new THREE.BoxGeometry(thickness, height, length);
+    const geometry =
+        axis === 'x'
+            ? new THREE.BoxGeometry(length, height, thickness)
+            : new THREE.BoxGeometry(thickness, height, length);
 
-  const wall = new THREE.Mesh(geometry, material);
+    const wall = new THREE.Mesh(geometry, material);
 
-  wall.castShadow = true;
-  wall.receiveShadow = true;
+    wall.castShadow = true;
+    wall.receiveShadow = true;
 
-  return wall;
+    return wall;
 }
 
 function createTiledFloorGeometry(width, thickness, length, tileSize = 2) {
-  const geometry = new THREE.BoxGeometry(width, thickness, length);
-  const uvs = geometry.attributes.uv;
+    const geometry = new THREE.BoxGeometry(width, thickness, length);
+    const uvs = geometry.attributes.uv;
 
-  for (let i = 0; i < uvs.count; i++) {
-    uvs.setXY(i, uvs.getX(i) * (width / tileSize), uvs.getY(i) * (length / tileSize));
-  }
+    for (let i = 0; i < uvs.count; i++) {
+        uvs.setXY(i, uvs.getX(i) * (width / tileSize), uvs.getY(i) * (length / tileSize));
+    }
 
-  uvs.needsUpdate = true;
+    uvs.needsUpdate = true;
 
-  return geometry;
+    return geometry;
 }
 
 export class Hotel {
-  constructor(scene, options = {}) {
-    this.scene = scene;
+    constructor(scene, options = {}) {
+        this.scene = scene;
 
-    this.ceilingThickness = 0.15;
-    this.hallwayWidth = options.hallwayWidth ?? 6;
-    this.hallwayHeight = options.hallwayHeight ?? 3;
-    this.hallwayLength = options.hallwayLength ?? 22;
-    this.floorThickness = options.floorThickness ?? 0.15;
-    this.activationDistance = options.activationDistance ?? this.hallwayLength + this.hallwayWidth;
+        this.ceilingThickness = 0.15;
+        this.hallwayWidth = options.hallwayWidth ?? 6;
+        this.hallwayHeight = options.hallwayHeight ?? 3;
+        this.hallwayLength = options.hallwayLength ?? 22;
+        this.floorThickness = options.floorThickness ?? 0.15;
+        this.activationDistance =
+            options.activationDistance ?? this.hallwayLength + this.hallwayWidth;
 
-    // Replace this with a GLB-cloning factory later if wanted.
-    this.wallFactory = options.wallFactory ?? createBoxWall;
+        // Replace this with a GLB-cloning factory later if wanted.
+        this.wallFactory = options.wallFactory ?? createBoxWall;
 
-    this.floorMaterial = new THREE.MeshStandardNodeMaterial({
-      color: 0x1a1718,
-      roughness: 0.95,
-      map: floorColorTexture,
-      normalMap: floorNormalTexture,
-    });
+        this.floorMaterial = new THREE.MeshStandardNodeMaterial({
+            color: 0x1a1718,
+            roughness: 0.95,
+            map: floorColorTexture,
+            normalMap: floorNormalTexture,
+        });
 
-    this.ceilingMaterial = new THREE.MeshStandardNodeMaterial({
-      color: 0x1a1718,
-      emissive: 0x1a1718,
-      emissiveIntensity: 0.35,
-      roughness: 0.95,
-    });
+        this.ceilingMaterial = new THREE.MeshStandardNodeMaterial({
+            color: 0x1a1718,
+            emissive: 0x1a1718,
+            emissiveIntensity: 0.35,
+            roughness: 0.95,
+        });
 
-    this.wallMaterial = new THREE.MeshStandardNodeMaterial({
-      color: 0xffffff,
-      map: wallColorTexture,
-      normalMap: wallNormalTexture,
-      normalScale: new THREE.Vector2(0.5, 0.5),
-      roughness: 0.9,
-    });
+        this.wallMaterial = new THREE.MeshStandardNodeMaterial({
+            color: 0xffffff,
+            map: wallColorTexture,
+            normalMap: wallNormalTexture,
+            normalScale: new THREE.Vector2(0.5, 0.5),
+            roughness: 0.9,
+        });
 
-    this.nodes = new Map();
-    this.corridors = new Map();
+        this.nodes = new Map();
+        this.corridors = new Map();
 
-    // Nothing is open until the player reaches this first junction.
-    this.createNode(0, 0, null, 0);
-  }
-
-  getStalkerSpawnPosition(playerPosition) {
-    const minimumDistance = 24;
-    const maximumDistance = 45;
-
-    const candidates = [...this.nodes.values()].filter((node) => {
-      const distance = node.position.distanceTo(playerPosition);
-
-      return node.activated && distance > minimumDistance && distance < maximumDistance;
-    });
-
-    if (candidates.length === 0) return null;
-
-    const node = candidates[Math.floor(Math.random() * candidates.length)];
-
-    return node.position.clone();
-  }
-
-  addCeiling(parent, width, length) {
-    const ceiling = new THREE.Mesh(
-      new THREE.BoxGeometry(width, this.ceilingThickness, length),
-      this.ceilingMaterial,
-    );
-
-    // Walls run from Y = 0 to Y = hallwayHeight.
-    ceiling.position.y = this.hallwayHeight + this.ceilingThickness * 0.5;
-
-    ceiling.receiveShadow = true;
-
-    parent.add(ceiling);
-  }
-
-  update(playerPosition) {
-    const nodesToActivate = [...this.nodes.values()].filter((node) => {
-      return !node.activated && node.position.distanceTo(playerPosition) < this.activationDistance;
-    });
-
-    for (const node of nodesToActivate) {
-      this.activateNode(node);
-    }
-  }
-
-  createNode(gridX, gridZ, incomingDirection, straightStreak) {
-    const key = `${gridX}:${gridZ}`;
-    const existingNode = this.nodes.get(key);
-
-    if (existingNode) {
-      if (incomingDirection) {
-        this.openSide(existingNode, incomingDirection);
-      }
-
-      return existingNode;
+        // Nothing is open until the player reaches this first junction.
+        this.createNode(0, 0, null, 0);
     }
 
-    const group = new THREE.Group();
-    group.position.set(gridX * this.hallwayLength, 0, gridZ * this.hallwayLength);
+    getStalkerSpawnPosition(playerPosition) {
+        const minimumDistance = 24;
+        const maximumDistance = 45;
 
-    const node = {
-      key,
-      gridX,
-      gridZ,
-      group,
-      position: group.position,
-      incomingDirection,
-      straightStreak,
-      activated: false,
-      plannedExits: [],
-      walls: new Map(),
-    };
+        const candidates = [...this.nodes.values()].filter((node) => {
+            const distance = node.position.distanceTo(playerPosition);
 
-    this.nodes.set(key, node);
-    this.scene.add(group);
+            return node.activated && distance > minimumDistance && distance < maximumDistance;
+        });
 
-    this.addJunctionFloor(node);
+        if (candidates.length === 0) return null;
 
-    for (const direction of DIRECTION_NAMES) {
-      this.addJunctionWall(node, direction);
+        const node = candidates[Math.floor(Math.random() * candidates.length)];
+
+        return node.position.clone();
     }
 
-    if (incomingDirection === null) {
-      // Start with a proper three-way hotel junction.
-      node.plannedExits = ['north', 'east', 'west'];
-    } else {
-      // The path we arrived from must remain open.
-      this.openSide(node, incomingDirection);
+    addCeiling(parent, width, length) {
+        const ceiling = new THREE.Mesh(
+            new THREE.BoxGeometry(width, this.ceilingThickness, length),
+            this.ceilingMaterial,
+        );
 
-      const forward = opposite(incomingDirection);
+        // Walls run from Y = 0 to Y = hallwayHeight.
+        ceiling.position.y = this.hallwayHeight + this.ceilingThickness * 0.5;
 
-      node.plannedExits = this.chooseExits(forward, straightStreak);
+        ceiling.receiveShadow = true;
+
+        parent.add(ceiling);
     }
 
-    return node;
-  }
+    update(playerPosition) {
+        const nodesToActivate = [...this.nodes.values()].filter((node) => {
+            return (
+                !node.activated &&
+                node.position.distanceTo(playerPosition) < this.activationDistance
+            );
+        });
 
-  chooseExits(forward, straightStreak) {
-    // Stops the player from walking forward forever.
-    if (straightStreak >= 2) {
-      if (Math.random() < 0.65) {
-        return [relativeDirection(forward, 'left'), relativeDirection(forward, 'right')];
-      }
-
-      return [relativeDirection(forward, Math.random() < 0.5 ? 'left' : 'right')];
+        for (const node of nodesToActivate) {
+            this.activateNode(node);
+        }
     }
 
-    const roll = Math.random();
+    createNode(gridX, gridZ, incomingDirection, straightStreak) {
+        const key = `${gridX}:${gridZ}`;
+        const existingNode = this.nodes.get(key);
 
-    // T-junction: a choice left/right; a wall straight ahead.
-    if (roll < 0.35) {
-      return [relativeDirection(forward, 'left'), relativeDirection(forward, 'right')];
+        if (existingNode) {
+            if (incomingDirection) {
+                this.openSide(existingNode, incomingDirection);
+            }
+
+            return existingNode;
+        }
+
+        const group = new THREE.Group();
+        group.position.set(gridX * this.hallwayLength, 0, gridZ * this.hallwayLength);
+
+        const node = {
+            key,
+            gridX,
+            gridZ,
+            group,
+            position: group.position,
+            incomingDirection,
+            straightStreak,
+            activated: false,
+            plannedExits: [],
+            walls: new Map(),
+            neighbors: new Map(),
+        };
+
+        this.nodes.set(key, node);
+        this.scene.add(group);
+
+        this.addJunctionFloor(node);
+
+        for (const direction of DIRECTION_NAMES) {
+            this.addJunctionWall(node, direction);
+        }
+
+        if (incomingDirection === null) {
+            // Start with a proper three-way hotel junction.
+            node.plannedExits = ['north', 'east', 'west'];
+        } else {
+            // The path we arrived from must remain open.
+            this.openSide(node, incomingDirection);
+
+            const forward = opposite(incomingDirection);
+
+            node.plannedExits = this.chooseExits(forward, straightStreak);
+        }
+
+        return node;
     }
 
-    // A main hallway plus one side route.
-    if (roll < 0.65) {
-      return [forward, relativeDirection(forward, 'left')];
+    chooseExits(forward, straightStreak) {
+        // Stops the player from walking forward forever.
+        if (straightStreak >= 2) {
+            if (Math.random() < 0.65) {
+                return [relativeDirection(forward, 'left'), relativeDirection(forward, 'right')];
+            }
+
+            return [relativeDirection(forward, Math.random() < 0.5 ? 'left' : 'right')];
+        }
+
+        const roll = Math.random();
+
+        // T-junction: a choice left/right; a wall straight ahead.
+        if (roll < 0.35) {
+            return [relativeDirection(forward, 'left'), relativeDirection(forward, 'right')];
+        }
+
+        // A main hallway plus one side route.
+        if (roll < 0.65) {
+            return [forward, relativeDirection(forward, 'left')];
+        }
+
+        if (roll < 0.9) {
+            return [forward, relativeDirection(forward, 'right')];
+        }
+
+        // A forced corner.
+        return [relativeDirection(forward, Math.random() < 0.5 ? 'left' : 'right')];
     }
 
-    if (roll < 0.9) {
-      return [forward, relativeDirection(forward, 'right')];
+    activateNode(node) {
+        node.activated = true;
+
+        for (const direction of node.plannedExits) {
+            this.connect(node, direction);
+        }
     }
 
-    // A forced corner.
-    return [relativeDirection(forward, Math.random() < 0.5 ? 'left' : 'right')];
-  }
+    connect(node, direction) {
+        const vector = DIRECTIONS[direction];
+        const nextX = node.gridX + vector.x;
+        const nextZ = node.gridZ + vector.z;
 
-  activateNode(node) {
-    node.activated = true;
+        const isStraight =
+            node.incomingDirection !== null && direction === opposite(node.incomingDirection);
 
-    for (const direction of node.plannedExits) {
-      this.connect(node, direction);
-    }
-  }
+        const childNode = this.createNode(
+            nextX,
+            nextZ,
+            opposite(direction),
+            isStraight ? node.straightStreak + 1 : 0,
+        );
 
-  connect(node, direction) {
-    const vector = DIRECTIONS[direction];
-    const nextX = node.gridX + vector.x;
-    const nextZ = node.gridZ + vector.z;
+        // Opens both ends and fills the entire gap with a corridor.
+        this.openSide(node, direction);
+        this.openSide(childNode, opposite(direction));
+        this.addCorridor(node, childNode);
 
-    const isStraight =
-      node.incomingDirection !== null && direction === opposite(node.incomingDirection);
-
-    const childNode = this.createNode(
-      nextX,
-      nextZ,
-      opposite(direction),
-      isStraight ? node.straightStreak + 1 : 0,
-    );
-
-    // Opens both ends and fills the entire gap with a corridor.
-    this.openSide(node, direction);
-    this.openSide(childNode, opposite(direction));
-    this.addCorridor(node, childNode);
-  }
-
-  addJunctionFloor(node) {
-    const floor = new THREE.Mesh(
-      createTiledFloorGeometry(this.hallwayWidth, this.floorThickness, this.hallwayWidth),
-      this.floorMaterial,
-    );
-
-    // Its upper surface is exactly at world Y = 0.
-    floor.position.y = -this.floorThickness * 0.5;
-    floor.receiveShadow = true;
-
-    node.group.add(floor);
-
-    this.addCeiling(node.group, this.hallwayWidth, this.hallwayWidth);
-  }
-
-  addJunctionWall(node, direction) {
-    const isNorthOrSouth = direction === 'north' || direction === 'south';
-
-    const wall = this.wallFactory({
-      length: this.hallwayWidth,
-      height: this.hallwayHeight,
-      thickness: 0.2,
-      axis: isNorthOrSouth ? 'x' : 'z',
-      material: this.wallMaterial,
-    });
-
-    const halfWidth = this.hallwayWidth * 0.5;
-
-    if (direction === 'north') wall.position.z = -halfWidth;
-    if (direction === 'south') wall.position.z = halfWidth;
-    if (direction === 'west') wall.position.x = -halfWidth;
-    if (direction === 'east') wall.position.x = halfWidth;
-
-    wall.position.y = this.hallwayHeight * 0.5;
-
-    node.group.add(wall);
-    node.walls.set(direction, wall);
-  }
-
-  openSide(node, direction) {
-    const wall = node.walls.get(direction);
-
-    if (!wall) {
-      return;
+        node.neighbors.set(direction, childNode);
+        childNode.neighbors.set(opposite(direction), node);
     }
 
-    wall.removeFromParent();
-    node.walls.delete(direction);
-  }
+    addJunctionFloor(node) {
+        const floor = new THREE.Mesh(
+            createTiledFloorGeometry(this.hallwayWidth, this.floorThickness, this.hallwayWidth),
+            this.floorMaterial,
+        );
 
-  addCorridor(fromNode, toNode) {
-    const corridorKey = [fromNode.key, toNode.key].sort().join('|');
+        // Its upper surface is exactly at world Y = 0.
+        floor.position.y = -this.floorThickness * 0.5;
+        floor.receiveShadow = true;
 
-    if (this.corridors.has(corridorKey)) {
-      return;
+        node.group.add(floor);
+
+        this.addCeiling(node.group, this.hallwayWidth, this.hallwayWidth);
     }
 
-    const isVertical = fromNode.gridX === toNode.gridX;
-    const corridorLength = this.hallwayLength - this.hallwayWidth;
+    addJunctionWall(node, direction) {
+        const isNorthOrSouth = direction === 'north' || direction === 'south';
 
-    const group = new THREE.Group();
+        const wall = this.wallFactory({
+            length: this.hallwayWidth,
+            height: this.hallwayHeight,
+            thickness: 0.2,
+            axis: isNorthOrSouth ? 'x' : 'z',
+            material: this.wallMaterial,
+        });
 
-    group.position.copy(fromNode.position);
-    group.position.add(toNode.position);
-    group.position.multiplyScalar(0.5);
+        const halfWidth = this.hallwayWidth * 0.5;
 
-    const floor = new THREE.Mesh(
-      createTiledFloorGeometry(
-        isVertical ? this.hallwayWidth : corridorLength,
-        this.floorThickness,
-        isVertical ? corridorLength : this.hallwayWidth,
-      ),
-      this.floorMaterial,
-    );
+        if (direction === 'north') wall.position.z = -halfWidth;
+        if (direction === 'south') wall.position.z = halfWidth;
+        if (direction === 'west') wall.position.x = -halfWidth;
+        if (direction === 'east') wall.position.x = halfWidth;
 
-    floor.position.y = -this.floorThickness * 0.5;
-    floor.receiveShadow = true;
-    group.add(floor);
+        wall.position.y = this.hallwayHeight * 0.5;
 
-    this.addCeiling(
-      group,
-      isVertical ? this.hallwayWidth : corridorLength,
-      isVertical ? corridorLength : this.hallwayWidth,
-    );
-
-    for (const side of [-1, 1]) {
-      const wall = this.wallFactory({
-        length: corridorLength,
-        height: this.hallwayHeight,
-        thickness: 0.2,
-        axis: isVertical ? 'z' : 'x',
-        material: this.wallMaterial,
-      });
-
-      wall.position.y = this.hallwayHeight * 0.5;
-
-      if (isVertical) {
-        wall.position.x = side * this.hallwayWidth * 0.5;
-      } else {
-        wall.position.z = side * this.hallwayWidth * 0.5;
-      }
-
-      group.add(wall);
+        node.group.add(wall);
+        node.walls.set(direction, wall);
     }
 
-    this.scene.add(group);
-    this.corridors.set(corridorKey, group);
-  }
+    openSide(node, direction) {
+        const wall = node.walls.get(direction);
+
+        if (!wall) {
+            return;
+        }
+
+        wall.removeFromParent();
+        node.walls.delete(direction);
+    }
+
+    addCorridor(fromNode, toNode) {
+        const corridorKey = [fromNode.key, toNode.key].sort().join('|');
+
+        if (this.corridors.has(corridorKey)) {
+            return;
+        }
+
+        const isVertical = fromNode.gridX === toNode.gridX;
+        const corridorLength = this.hallwayLength - this.hallwayWidth;
+
+        const group = new THREE.Group();
+
+        group.position.copy(fromNode.position);
+        group.position.add(toNode.position);
+        group.position.multiplyScalar(0.5);
+
+        const floor = new THREE.Mesh(
+            createTiledFloorGeometry(
+                isVertical ? this.hallwayWidth : corridorLength,
+                this.floorThickness,
+                isVertical ? corridorLength : this.hallwayWidth,
+            ),
+            this.floorMaterial,
+        );
+
+        floor.position.y = -this.floorThickness * 0.5;
+        floor.receiveShadow = true;
+        group.add(floor);
+
+        this.addCeiling(
+            group,
+            isVertical ? this.hallwayWidth : corridorLength,
+            isVertical ? corridorLength : this.hallwayWidth,
+        );
+
+        for (const side of [-1, 1]) {
+            const wall = this.wallFactory({
+                length: corridorLength,
+                height: this.hallwayHeight,
+                thickness: 0.2,
+                axis: isVertical ? 'z' : 'x',
+                material: this.wallMaterial,
+            });
+
+            wall.position.y = this.hallwayHeight * 0.5;
+
+            if (isVertical) {
+                wall.position.x = side * this.hallwayWidth * 0.5;
+            } else {
+                wall.position.z = side * this.hallwayWidth * 0.5;
+            }
+
+            group.add(wall);
+        }
+
+        this.scene.add(group);
+        this.corridors.set(corridorKey, group);
+    }
+
+    getStalkerSpawnNode(playerPosition) {
+        const minimumDistance = 24;
+        const maximumDistance = 45;
+
+        const candidates = [...this.nodes.values()].filter((node) => {
+            const distance = node.position.distanceTo(playerPosition);
+
+            return node.activated && distance > minimumDistance && distance < maximumDistance;
+        });
+
+        if (candidates.length === 0) return null;
+
+        return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    getClosestNode(position) {
+        let closestNode = null;
+        let closestDistance = Infinity;
+
+        for (const node of this.nodes.values()) {
+            const distance = node.position.distanceTo(position);
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestNode = node;
+            }
+        }
+
+        return closestNode;
+    }
+
+    getNextNodeToward(startNode, targetNode) {
+        if (!startNode || !targetNode || startNode === targetNode) {
+            return null;
+        }
+
+        const queue = [startNode];
+        const previous = new Map([[startNode.key, null]]);
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+
+            if (current === targetNode) break;
+
+            for (const neighbor of current.neighbors.values()) {
+                if (previous.has(neighbor.key)) continue;
+
+                previous.set(neighbor.key, current);
+                queue.push(neighbor);
+            }
+        }
+
+        if (!previous.has(targetNode.key)) return null;
+
+        let step = targetNode;
+
+        while (previous.get(step.key) !== startNode) {
+            step = previous.get(step.key);
+        }
+
+        return step;
+    }
 }
