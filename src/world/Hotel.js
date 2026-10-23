@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { createTiledFloorGeometry } from './createTiledFloorGeometry';
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -61,19 +62,6 @@ function createBoxWall({ length, height, axis, material }) {
     return wall
 }
 
-function createTiledFloorGeometry(width, thickness, length, tileSize = 2) {
-    const geometry = new THREE.BoxGeometry(width, thickness, length);
-    const uvs = geometry.attributes.uv;
-
-    for (let i = 0; i < uvs.count; i++) {
-        uvs.setXY(i, uvs.getX(i) * (width / tileSize), uvs.getY(i) * (length / tileSize));
-    }
-
-    uvs.needsUpdate = true;
-
-    return geometry;
-}
-
 export class Hotel {
     constructor(scene, options = {}) {
         this.scene = scene;
@@ -112,7 +100,7 @@ export class Hotel {
         this.corridors = new Map();
 
         // Nothing is open until the player reaches this first junction.
-        this.createNode(0, 0, null, 0);
+        this.startNode = this.createNode(0, 0, null, 0);
     }
 
     getStalkerSpawnPosition(playerPosition) {
@@ -444,5 +432,26 @@ export class Hotel {
         }
 
         return step;
+    }
+
+    getStartNode() {
+        return this.startNode
+    }
+
+    openStartEntrance(direction = 'south') {
+        this.openSide(this.startNode, direction)
+    }
+
+    getRoomConfig() {
+        return {
+            wallFactory: this.wallFactory,
+            floorMaterial: this.floorMaterial,
+            wallMaterial: this.wallMaterial,
+            ceilingMaterial: this.ceilingMaterial,
+            hallwayWidth: this.hallwayWidth,
+            hallwayHeight: this.hallwayHeight,
+            floorThickness: this.floorThickness,
+            ceilingThickness: this.ceilingThickness
+        }
     }
 }
