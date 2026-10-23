@@ -46,7 +46,7 @@ export class Stalker {
         const bounds = new THREE.Box3().setFromObject(visual);
         const size = bounds.getSize(new THREE.Vector3());
 
-        const targetHeight = 1.8;
+        const targetHeight = 2.8;
         visual.scale.multiplyScalar(targetHeight / size.y);
 
         // Re-measure after scaling, then center X/Z around a clean pivot.

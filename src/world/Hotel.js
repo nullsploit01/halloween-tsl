@@ -2,40 +2,15 @@ import * as THREE from 'three/webgpu';
 
 const textureLoader = new THREE.TextureLoader();
 
-const wallColorTexture = await textureLoader.loadAsync(
-    './textures/concrete_slab_wall_1k/concrete_slab_wall_diff_1k.png',
-);
-
-const wallNormalTexture = await textureLoader.loadAsync(
-    './textures/concrete_slab_wall_1k/concrete_slab_wall_nor_gl_1k.png',
-);
-
-wallColorTexture.colorSpace = THREE.SRGBColorSpace;
-
-wallColorTexture.wrapS = wallColorTexture.wrapT = THREE.RepeatWrapping;
-wallColorTexture.repeat.set(4, 2);
-
-wallNormalTexture.wrapS = wallNormalTexture.wrapT = THREE.RepeatWrapping;
-wallNormalTexture.repeat.set(4, 2);
-
 const floorColorTexture = await textureLoader.loadAsync(
-    './textures/old_wooden_floor_02_1k/old_wooden_floor_02_diff_1k.png',
-);
-
-const floorNormalTexture = await textureLoader.loadAsync(
-    './textures/old_wooden_floor_02_1k/old_wooden_floor_02_nor_gl_1k.png',
+    './textures/white_marble/texture.jpg',
 );
 
 floorColorTexture.colorSpace = THREE.SRGBColorSpace;
-
 floorColorTexture.repeat.set(0.25, 0.25);
-floorNormalTexture.repeat.set(0.25, 0.25);
 
 for (const texture of [
-    wallColorTexture,
-    wallNormalTexture,
     floorColorTexture,
-    floorNormalTexture,
 ]) {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
@@ -70,18 +45,20 @@ function relativeDirection(forward, relative) {
     return forward;
 }
 
-function createBoxWall({ length, height, thickness, axis, material }) {
-    const geometry =
-        axis === 'x'
-            ? new THREE.BoxGeometry(length, height, thickness)
-            : new THREE.BoxGeometry(thickness, height, length);
+function createBoxWall({ length, height, axis, material }) {
+    const geometry = new THREE.PlaneGeometry(length, height)
 
-    const wall = new THREE.Mesh(geometry, material);
+    // A plane starts along X/Y. Rotate it when the wall runs along Z.
+    if (axis === 'z') {
+        geometry.rotateY(Math.PI * 0.5)
+    }
 
-    wall.castShadow = true;
-    wall.receiveShadow = true;
+    const wall = new THREE.Mesh(geometry, material)
 
-    return wall;
+    wall.castShadow = true
+    wall.receiveShadow = false
+
+    return wall
 }
 
 function createTiledFloorGeometry(width, thickness, length, tileSize = 2) {
@@ -113,24 +90,21 @@ export class Hotel {
         this.wallFactory = options.wallFactory ?? createBoxWall;
 
         this.floorMaterial = new THREE.MeshStandardNodeMaterial({
-            color: 0x1a1718,
-            roughness: 0.95,
+            color: 0xffffff,
+            roughness: 0.25,
+            metalness: 0.75,
             map: floorColorTexture,
-            normalMap: floorNormalTexture,
         });
 
         this.ceilingMaterial = new THREE.MeshStandardNodeMaterial({
-            color: 0x1a1718,
-            emissive: 0x1a1718,
-            emissiveIntensity: 0.35,
+            color: 0x96958b,
             roughness: 0.95,
         });
 
         this.wallMaterial = new THREE.MeshStandardNodeMaterial({
-            color: 0xffffff,
-            map: wallColorTexture,
-            normalMap: wallNormalTexture,
-            normalScale: new THREE.Vector2(0.5, 0.5),
+            color: 0x77776f,
+            normalScale: new THREE.Vector2(0.35, 0.35),
+            side: THREE.DoubleSide,
             roughness: 0.9,
         });
 
