@@ -138,11 +138,29 @@ function tick() {
 
     const deltaTime = timer.getDelta();
 
+    const forward = new THREE.Vector3();
+    const right = new THREE.Vector3();
+    const movement = new THREE.Vector3();
+
     if (controls.isLocked) {
-        if (keys.has('KeyW')) controls.moveForward(moveSpeed * deltaTime);
-        if (keys.has('KeyS')) controls.moveForward(-moveSpeed * deltaTime);
-        if (keys.has('KeyA')) controls.moveRight(-moveSpeed * deltaTime);
-        if (keys.has('KeyD')) controls.moveRight(moveSpeed * deltaTime);
+        movement.set(0, 0, 0);
+
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        forward.normalize();
+
+        right.crossVectors(forward, camera.up).normalize();
+
+        if (keys.has('KeyW')) movement.add(forward);
+        if (keys.has('KeyS')) movement.sub(forward);
+        if (keys.has('KeyD')) movement.add(right);
+        if (keys.has('KeyA')) movement.sub(right);
+
+        if (movement.lengthSq() > 0) {
+            movement.normalize().multiplyScalar(moveSpeed * deltaTime);
+
+            hotel.movePlayer(camera.position, movement, 1.25);
+        }
     }
 
     cameraHud.update(deltaTime);

@@ -28,7 +28,7 @@ export async function addLantern(camera) {
     lantern.add(lanternLight);
 
     // Local position: right/left, up/down, forward/back from the camera.
-    lantern.position.set(0.45, -0.55, -1.6);
+    lantern.position.set(0.32, -0.55, -0.95);
 
     // Keep your model-specific correction.
     lantern.rotation.set(0, -Math.PI * 0.5, 0);

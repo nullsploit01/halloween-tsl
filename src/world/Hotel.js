@@ -1,18 +1,14 @@
-import * as THREE from 'three/webgpu';
 import { createTiledFloorGeometry } from './createTiledFloorGeometry';
+import * as THREE from 'three/webgpu';
 
 const textureLoader = new THREE.TextureLoader();
 
-const floorColorTexture = await textureLoader.loadAsync(
-    './textures/white_marble/texture.jpg',
-);
+const floorColorTexture = await textureLoader.loadAsync('./textures/white_marble/texture.jpg');
 
 floorColorTexture.colorSpace = THREE.SRGBColorSpace;
 floorColorTexture.repeat.set(0.25, 0.25);
 
-for (const texture of [
-    floorColorTexture,
-]) {
+for (const texture of [floorColorTexture]) {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
 }
@@ -47,19 +43,19 @@ function relativeDirection(forward, relative) {
 }
 
 function createBoxWall({ length, height, axis, material }) {
-    const geometry = new THREE.PlaneGeometry(length, height)
+    const geometry = new THREE.PlaneGeometry(length, height);
 
     // A plane starts along X/Y. Rotate it when the wall runs along Z.
     if (axis === 'z') {
-        geometry.rotateY(Math.PI * 0.5)
+        geometry.rotateY(Math.PI * 0.5);
     }
 
-    const wall = new THREE.Mesh(geometry, material)
+    const wall = new THREE.Mesh(geometry, material);
 
-    wall.castShadow = true
-    wall.receiveShadow = false
+    wall.castShadow = true;
+    wall.receiveShadow = false;
 
-    return wall
+    return wall;
 }
 
 export class Hotel {
@@ -98,6 +94,8 @@ export class Hotel {
 
         this.nodes = new Map();
         this.corridors = new Map();
+
+        this.wallCollisions = options.wallCollisions ?? null;
 
         // Nothing is open until the player reaches this first junction.
         this.startNode = this.createNode(0, 0, null, 0);
@@ -298,6 +296,9 @@ export class Hotel {
         wall.position.y = this.hallwayHeight * 0.5;
 
         node.group.add(wall);
+
+        this.registerWall(wall, isNorthOrSouth ? 'x' : 'z', this.hallwayWidth);
+
         node.walls.set(direction, wall);
     }
 
@@ -307,6 +308,8 @@ export class Hotel {
         if (!wall) {
             return;
         }
+
+        this.wallCollisions?.remove(wall);
 
         wall.removeFromParent();
         node.walls.delete(direction);
@@ -365,6 +368,8 @@ export class Hotel {
             }
 
             group.add(wall);
+
+            this.registerWall(wall, isVertical ? 'z' : 'x', corridorLength);
         }
 
         this.scene.add(group);
@@ -435,11 +440,11 @@ export class Hotel {
     }
 
     getStartNode() {
-        return this.startNode
+        return this.startNode;
     }
 
     openStartEntrance(direction = 'south') {
-        this.openSide(this.startNode, direction)
+        this.openSide(this.startNode, direction);
     }
 
     getRoomConfig() {
@@ -451,7 +456,15 @@ export class Hotel {
             hallwayWidth: this.hallwayWidth,
             hallwayHeight: this.hallwayHeight,
             floorThickness: this.floorThickness,
-            ceilingThickness: this.ceilingThickness
-        }
+            ceilingThickness: this.ceilingThickness,
+        };
+    }
+
+    registerWall(wall, axis, length) {
+        this.wallCollisions?.add(wall, axis, length);
+    }
+
+    movePlayer(position, movement, radius = 0.35) {
+        this.wallCollisions?.move(position, movement, radius);
     }
 }

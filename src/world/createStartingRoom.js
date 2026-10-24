@@ -1,12 +1,12 @@
-import * as THREE from 'three/webgpu'
-import { createTiledFloorGeometry } from './createTiledFloorGeometry.js'
+import { createTiledFloorGeometry } from './createTiledFloorGeometry.js';
+import * as THREE from 'three/webgpu';
 
 const DIRECTIONS = {
     south: { x: 0, z: 1, rotation: 0 },
     north: { x: 0, z: -1, rotation: Math.PI },
     east: { x: 1, z: 0, rotation: Math.PI * 0.5 },
-    west: { x: -1, z: 0, rotation: -Math.PI * 0.5 }
-}
+    west: { x: -1, z: 0, rotation: -Math.PI * 0.5 },
+};
 
 export function createStartingRoom({
     scene,
@@ -20,89 +20,68 @@ export function createStartingRoom({
     hallwayHeight,
     floorThickness,
     ceilingThickness,
-    roomDepth = 8
+    wallCollisions,
+    roomDepth = 8,
 }) {
-    const config = DIRECTIONS[direction]
-    const group = new THREE.Group()
+    const config = DIRECTIONS[direction];
+    const group = new THREE.Group();
 
-    group.rotation.y = config.rotation
-    group.position.copy(entrancePosition)
-    group.position.x +=
-        config.x * (hallwayWidth * 0.5 + roomDepth * 0.5)
-    group.position.z +=
-        config.z * (hallwayWidth * 0.5 + roomDepth * 0.5)
+    group.rotation.y = config.rotation;
+    group.position.copy(entrancePosition);
+    group.position.x += config.x * (hallwayWidth * 0.5 + roomDepth * 0.5);
+    group.position.z += config.z * (hallwayWidth * 0.5 + roomDepth * 0.5);
 
     const floor = new THREE.Mesh(
-        createTiledFloorGeometry(
-            hallwayWidth,
-            floorThickness,
-            roomDepth
-        ),
-        floorMaterial
-    )
+        createTiledFloorGeometry(hallwayWidth, floorThickness, roomDepth),
+        floorMaterial,
+    );
 
-    floor.position.y = -floorThickness * 0.5
-    floor.receiveShadow = true
-    group.add(floor)
+    floor.position.y = -floorThickness * 0.5;
+    floor.receiveShadow = true;
+    group.add(floor);
 
     const ceiling = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            hallwayWidth,
-            ceilingThickness,
-            roomDepth
-        ),
-        ceilingMaterial
-    )
+        new THREE.BoxGeometry(hallwayWidth, ceilingThickness, roomDepth),
+        ceilingMaterial,
+    );
 
-    ceiling.position.y = hallwayHeight + ceilingThickness * 0.5
-    group.add(ceiling)
+    ceiling.position.y = hallwayHeight + ceilingThickness * 0.5;
+    group.add(ceiling);
 
     for (const side of [-1, 1]) {
         const wall = wallFactory({
             length: roomDepth,
             height: hallwayHeight,
             axis: 'z',
-            material: wallMaterial
-        })
+            material: wallMaterial,
+        });
 
-        wall.position.x = side * hallwayWidth * 0.5
-        wall.position.y = hallwayHeight * 0.5
-        group.add(wall)
+        wall.position.x = side * hallwayWidth * 0.5;
+        wall.position.y = hallwayHeight * 0.5;
+        group.add(wall);
+
+        wallCollisions?.add(wall, 'z', roomDepth);
     }
-
-    const frontWall = wallFactory({
-        length: hallwayWidth,
-        height: hallwayHeight,
-        axis: 'x',
-        material: wallMaterial
-    })
-
-    frontWall.position.z = -roomDepth * 0.5
-    frontWall.position.y = hallwayHeight * 0.5
-
-    group.add(frontWall)
 
     const backWall = wallFactory({
         length: hallwayWidth,
         height: hallwayHeight,
         axis: 'x',
-        material: wallMaterial
-    })
+        material: wallMaterial,
+    });
 
-    backWall.position.z = roomDepth * 0.5
-    backWall.position.y = hallwayHeight * 0.5
-    group.add(backWall)
+    backWall.position.z = roomDepth * 0.5;
+    backWall.position.y = hallwayHeight * 0.5;
+    group.add(backWall);
 
-    scene.add(group)
-    group.updateMatrixWorld(true)
+    wallCollisions?.add(backWall, 'x', roomDepth);
+
+    scene.add(group);
+    group.updateMatrixWorld(true);
 
     return {
         group,
-        spawnPosition: group.localToWorld(
-            new THREE.Vector3(0, 1.7, roomDepth * 0.2)
-        ),
-        doorwayLookAt: group.localToWorld(
-            new THREE.Vector3(0, 1.7, -roomDepth * 0.5)
-        )
-    }
+        spawnPosition: group.localToWorld(new THREE.Vector3(0, 1.7, roomDepth * 0.2)),
+        doorwayLookAt: group.localToWorld(new THREE.Vector3(0, 1.7, -roomDepth * 0.5)),
+    };
 }
