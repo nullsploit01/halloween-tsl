@@ -33,7 +33,7 @@ const postProcessing = createPostProcessing({
 
 const { ambientLight } = addLighting({ scene, renderer });
 
-const { lantern, hotel, lanternLight } = await addWorld(scene, camera);
+const { lantern, hotel, lanternLight, junctionBox } = await addWorld(scene, camera);
 
 const stalker = new Stalker(scene, {
     agroDistance: 10,
@@ -165,6 +165,7 @@ function tick() {
 
     cameraHud.update(deltaTime);
     hotel.update(camera.position);
+    junctionBox.trySpawn(hotel, camera.position);
 
     stalker.trySpawn(hotel, camera.position);
     stalker.update(camera.position, deltaTime, hotel);

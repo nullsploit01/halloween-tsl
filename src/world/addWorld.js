@@ -1,5 +1,6 @@
 import { createStartingRoom } from './createStartingRoom.js';
 import { Hotel } from './Hotel.js';
+import { JunctionBox } from './JunctionBox.js';
 import { addLantern } from './lantern';
 import { WallCollisions } from './WallCollisions.js';
 
@@ -12,6 +13,8 @@ export const addWorld = async (scene, camera) => {
         hallwayLength: 28,
         wallCollisions,
     });
+
+    const junctionBox = new JunctionBox()
 
     hotel.openStartEntrance('south');
 
@@ -28,5 +31,5 @@ export const addWorld = async (scene, camera) => {
 
     const { lantern, lanternLight } = await addLantern(camera, scene);
 
-    return { lantern, lanternLight, hotel };
+    return { lantern, lanternLight, hotel, junctionBox };
 };
