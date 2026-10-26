@@ -5,7 +5,9 @@ import { createScene } from './core/createScene.js';
 import { addLighting } from './core/lighting.js';
 import { Sizes } from './core/Sizes.js';
 import { createCameraHud } from './ui/createCameraHud.js';
+import { createJunctionBoxHud } from './ui/createJunctionBoxHud.js';
 import { addWorld } from './world/addWorld.js';
+import { JunctionBox } from './world/JunctionBox.js';
 import { Stalker } from './world/Stalker.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import * as THREE from 'three/webgpu';
@@ -33,7 +35,7 @@ const postProcessing = createPostProcessing({
 
 const { ambientLight } = addLighting({ scene, renderer });
 
-const { lantern, hotel, lanternLight, junctionBox } = await addWorld(scene, camera);
+const { lantern, hotel, lanternLight } = await addWorld(scene, camera);
 
 const stalker = new Stalker(scene, {
     agroDistance: 10,
@@ -107,6 +109,27 @@ function triggerSenseBlur() {
     }, 4000);
 }
 
+const junctionBoxHud = createJunctionBoxHud();
+
+const junctionBoxes = [];
+const maxJunctionBoxes = 3;
+let activeJunctionBox = null;
+
+function spawnNextJunctionBox() {
+    if (junctionBoxes.length >= maxJunctionBoxes) return false;
+
+    const box = new JunctionBox();
+
+    const spawned = box.spawn(hotel, camera.position, 100);
+
+    if (!spawned) return false;
+
+    junctionBoxes.push(box);
+    activeJunctionBox = box;
+
+    return true;
+}
+
 window.addEventListener('keydown', (event) => {
     if (event.repeat) return;
 
@@ -148,21 +171,24 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.code === 'KeyJ') {
-        junctionBox.spawn(hotel, camera.position, 100)
+        spawnNextJunctionBox();
+    }
+
+    if (event.code === 'KeyE') {
+        activeJunctionBox?.beginActivation(camera.position);
     }
 });
 
 const keys = new Set();
-const moveSpeed = 4;
 const timer = new THREE.Timer();
 
 window.addEventListener('keydown', (event) => keys.add(event.code));
 window.addEventListener('keyup', (event) => keys.delete(event.code));
 window.addEventListener('blur', () => keys.clear());
 
-const walkSpeed = 4
-const sprintSpeed = 7
-const sneakSpeed = 1.5
+const walkSpeed = 4;
+const sprintSpeed = 7;
+const sneakSpeed = 1.5;
 
 function tick() {
     timer.update();
@@ -188,26 +214,20 @@ function tick() {
         if (keys.has('KeyA')) movement.sub(right);
 
         if (movement.lengthSq() > 0) {
-            const isShiftHeld =
-                keys.has('ShiftLeft') ||
-                keys.has('ShiftRight')
+            const isShiftHeld = keys.has('ShiftLeft') || keys.has('ShiftRight');
 
-            const isCtrlHeld =
-                keys.has('AltLeft') ||
-                keys.has('AltRight')
+            const isCtrlHeld = keys.has('AltLeft') || keys.has('AltRight');
 
             // Ctrl + Shift takes priority over sprint.
-            let currentMoveSpeed = walkSpeed
+            let currentMoveSpeed = walkSpeed;
 
             if (isShiftHeld && isCtrlHeld) {
-                currentMoveSpeed = sneakSpeed
+                currentMoveSpeed = sneakSpeed;
             } else if (isShiftHeld) {
-                currentMoveSpeed = sprintSpeed
+                currentMoveSpeed = sprintSpeed;
             }
 
-            movement.normalize().multiplyScalar(
-                currentMoveSpeed * deltaTime
-            )
+            movement.normalize().multiplyScalar(currentMoveSpeed * deltaTime);
 
             hotel.movePlayer(camera.position, movement, 1.25);
         }
@@ -215,7 +235,17 @@ function tick() {
 
     cameraHud.update(deltaTime);
     hotel.update(camera.position);
-    cameraHud.updateObjective(camera, junctionBox, senseModeActive);
+    cameraHud.updateObjective(camera, activeJunctionBox, senseModeActive);
+
+    const wasActivated = activeJunctionBox?.update(camera.position, deltaTime);
+
+    junctionBoxHud.update(camera, activeJunctionBox);
+
+    if (wasActivated) {
+        setTimeout(() => {
+            spawnNextJunctionBox();
+        }, 900);
+    }
 
     stalker.trySpawn(hotel, camera.position);
     stalker.update(camera.position, deltaTime, hotel);

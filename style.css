@@ -137,6 +137,43 @@ body {
     letter-spacing: 0.12em;
 }
 
+.junction-box-hud {
+    position: fixed;
+    z-index: 30;
+    display: none;
+    width: 220px;
+    transform: translate(-50%, -100%);
+    color: #e8e4da;
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-align: center;
+    pointer-events: none;
+    text-shadow: 0 0 7px #000;
+}
+
+.junction-box-hud__spinner {
+    display: none;
+}
+
+.junction-box-hud__text {
+    margin-bottom: 7px;
+}
+
+.junction-box-hud__progress {
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.junction-box-hud__progress i {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: #ff9d26;
+    box-shadow: 0 0 8px #ff9d26;
+    transition: width 0.05s linear;
+}
+
 canvas.threejs.sense-blur {
     animation: sense-blur 4s ease-out both;
     will-change: filter;

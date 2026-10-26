@@ -31,6 +31,15 @@ export class JunctionBox {
         beacon.position.set(0, 0.1, 0.3);
 
         this.group.add(beacon);
+
+        this.state = 'off'; // off | activating | on
+        this.activationTime = 0;
+        this.activationDuration = 4;
+        this.interactionDistance = 2.4;
+
+        this.warningLight = warningLight;
+        this.beacon = beacon;
+        this.worldPosition = new THREE.Vector3();
     }
 
     trySpawn(hotel, playerPosition) {
@@ -73,52 +82,98 @@ export class JunctionBox {
     }
 
     spawn(hotel, playerPosition, maxDistance = 100) {
-        if (this.hasSpawned) return false
+        if (this.hasSpawned) return false;
 
-        const minimumDistance = 10
+        const minimumDistance = 10;
 
         const candidates = [...hotel.nodes.values()].filter((node) => {
-            const distance = node.position.distanceTo(playerPosition)
+            const distance = node.position.distanceTo(playerPosition);
 
             return (
                 node.activated &&
                 node.walls.size > 0 &&
                 distance >= minimumDistance &&
                 distance <= maxDistance
-            )
-        })
+            );
+        });
 
         if (candidates.length === 0) {
-            console.warn('No valid junction-box wall exists within range yet.')
-            return false
+            console.warn('No valid junction-box wall exists within range yet.');
+            return false;
         }
 
-        const node = candidates[
-            Math.floor(Math.random() * candidates.length)
-        ]
+        const node = candidates[Math.floor(Math.random() * candidates.length)];
 
-        const directions = [...node.walls.keys()]
-        const direction = directions[
-            Math.floor(Math.random() * directions.length)
-        ]
+        const directions = [...node.walls.keys()];
+        const direction = directions[Math.floor(Math.random() * directions.length)];
 
-        const offset = hotel.hallwayWidth * 0.5 - 0.08
+        const offset = hotel.hallwayWidth * 0.5 - 0.08;
 
         const placement = {
             north: { x: 0, z: -offset, rotationY: 0 },
             south: { x: 0, z: offset, rotationY: Math.PI },
             east: { x: offset, z: 0, rotationY: -Math.PI * 0.5 },
             west: { x: -offset, z: 0, rotationY: Math.PI * 0.5 },
-        }[direction]
+        }[direction];
 
-        this.group.position.set(placement.x, 1.25, placement.z)
-        this.group.rotation.y = placement.rotationY
+        this.group.position.set(placement.x, 1.25, placement.z);
+        this.group.rotation.y = placement.rotationY;
 
-        node.group.add(this.group)
+        node.group.add(this.group);
 
-        this.node = node
-        this.hasSpawned = true
+        this.node = node;
+        this.hasSpawned = true;
 
-        return true
+        return true;
+    }
+
+    isPlayerNearby(playerPosition) {
+        this.group.getWorldPosition(this.worldPosition);
+
+        return this.worldPosition.distanceTo(playerPosition) <= this.interactionDistance;
+    }
+
+    beginActivation(playerPosition) {
+        if (!this.hasSpawned || this.state !== 'off' || !this.isPlayerNearby(playerPosition)) {
+            return false;
+        }
+
+        this.state = 'activating';
+        this.activationTime = 0;
+
+        return true;
+    }
+
+    update(playerPosition, deltaTime) {
+        if (this.state !== 'activating') return false;
+
+        // Leaving the box cancels the restoration.
+        if (!this.isPlayerNearby(playerPosition)) {
+            this.state = 'off';
+            this.activationTime = 0;
+            return false;
+        }
+
+        this.activationTime += deltaTime;
+
+        const progress = Math.min(this.activationTime / this.activationDuration, 1);
+
+        // Red → amber while restoring.
+        this.warningLight.material.color.setHex(0xff9d26);
+        this.beacon.color.setHex(0xff8a18);
+        this.beacon.intensity = 2 + Math.sin(performance.now() * 0.02) * 1.5;
+
+        if (progress < 1) return false;
+
+        this.state = 'on';
+        this.warningLight.material.color.setHex(0x7dff9b);
+        this.beacon.color.setHex(0x56ff7a);
+        this.beacon.intensity = 2.5;
+
+        return true; // Activation completed this frame.
+    }
+
+    get activationProgress() {
+        return Math.min(this.activationTime / this.activationDuration, 1);
     }
 }
