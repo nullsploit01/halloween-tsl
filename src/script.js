@@ -160,6 +160,10 @@ window.addEventListener('keydown', (event) => keys.add(event.code));
 window.addEventListener('keyup', (event) => keys.delete(event.code));
 window.addEventListener('blur', () => keys.clear());
 
+const walkSpeed = 4
+const sprintSpeed = 7
+const sneakSpeed = 1.5
+
 function tick() {
     timer.update();
 
@@ -184,7 +188,26 @@ function tick() {
         if (keys.has('KeyA')) movement.sub(right);
 
         if (movement.lengthSq() > 0) {
-            movement.normalize().multiplyScalar(moveSpeed * deltaTime);
+            const isShiftHeld =
+                keys.has('ShiftLeft') ||
+                keys.has('ShiftRight')
+
+            const isCtrlHeld =
+                keys.has('AltLeft') ||
+                keys.has('AltRight')
+
+            // Ctrl + Shift takes priority over sprint.
+            let currentMoveSpeed = walkSpeed
+
+            if (isShiftHeld && isCtrlHeld) {
+                currentMoveSpeed = sneakSpeed
+            } else if (isShiftHeld) {
+                currentMoveSpeed = sprintSpeed
+            }
+
+            movement.normalize().multiplyScalar(
+                currentMoveSpeed * deltaTime
+            )
 
             hotel.movePlayer(camera.position, movement, 1.25);
         }
