@@ -1,73 +1,167 @@
 * {
-  margin: 0;
-  padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
 html,
 body {
-  overflow: hidden;
+    overflow: hidden;
 }
 
 .threejs {
-  position: fixed;
-  top: 0;
-  left: 0;
-  outline: none;
+    position: fixed;
+    inset: 0;
+    outline: none;
 }
 
+.camera-hud,
+.objective-signal {
+    filter: none !important;
+}
+
+/* F — night-vision camera HUD */
 .camera-hud {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  pointer-events: none;
-  display: none;
-  padding: 34px;
-  color: #a8ff9a;
-  font-family: monospace;
-  font-size: 18px;
-  letter-spacing: 0.14em;
-  text-shadow: 0 0 8px #4cff45;
-}
-
-.camera-hud.is-visible {
-  display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: none;
+    padding: 34px;
+    color: #a8ff9a;
+    font-family: monospace;
+    font-size: 18px;
+    letter-spacing: 0.14em;
+    pointer-events: none;
+    text-shadow: 0 0 8px #4cff45;
 }
 
 .camera-hud__clock {
-  font-size: 14px;
-  opacity: 0.85;
+    font-size: 14px;
+    opacity: 0.85;
 }
 
 .camera-hud__top,
 .camera-hud__bottom {
-  display: flex;
-  justify-content: space-between;
+    display: flex;
+    justify-content: space-between;
 }
 
 .camera-hud__bottom {
-  position: absolute;
-  right: 34px;
-  bottom: 34px;
+    position: absolute;
+    right: 34px;
+    bottom: 34px;
 }
 
 .camera-hud__rec i {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 6px;
-  border-radius: 50%;
-  background: #ff3b3b;
-  animation: record-blink 1s steps(2, start) infinite;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: #ff3b3b;
+    animation: record-blink 1s steps(2, start) infinite;
 }
 
 .camera-hud__status {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* G — Sobel Sense HUD */
+.objective-signal {
+    position: fixed;
+    top: 28px;
+    left: 50%;
+    z-index: 20;
+    display: none;
+    transform: translateX(-50%);
+    color: rgba(240, 245, 245, 0.9);
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    pointer-events: none;
+}
+
+.sense-indicator {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 7px;
+    border: 1px solid rgba(235, 245, 245, 0.55);
+    border-radius: 50%;
+}
+
+.sense-indicator::before,
+.sense-indicator::after {
+    position: absolute;
+    top: 50%;
+    width: 7px;
+    height: 1px;
+    background: rgba(235, 245, 245, 0.7);
+    content: '';
+}
+
+.sense-indicator::before {
+    left: -5px;
+}
+
+.sense-indicator::after {
+    right: -5px;
+}
+
+.objective-signal__arrow {
+    position: absolute;
+    top: 9px;
+    left: 12px;
+    color: #ffffff;
+    font-size: 20px;
+    line-height: 1;
+    transform-origin: center;
+    transition: transform 0.08s linear;
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.35);
+}
+
+.objective-signal__label {
+    display: block;
+    color: rgba(225, 235, 235, 0.72);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.2em;
+}
+
+.objective-signal__distance {
+    display: block;
+    margin-top: 4px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+}
+
+canvas.threejs.sense-blur {
+    animation: sense-blur 4s ease-out both;
+    will-change: filter;
+}
+
+@keyframes sense-blur {
+    0% {
+        filter: blur(7px) brightness(0.65);
+    }
+
+    12% {
+        filter: blur(4px) brightness(0.8);
+    }
+
+    45% {
+        filter: blur(1.5px) brightness(0.95);
+    }
+
+    100% {
+        filter: blur(0) brightness(1);
+    }
 }
 
 @keyframes record-blink {
-  50% {
-    opacity: 0;
-  }
+    50% {
+        opacity: 0;
+    }
 }

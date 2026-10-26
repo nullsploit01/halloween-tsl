@@ -68,6 +68,7 @@ let nightVisionEnabled = false;
 const normalAmbientIntensity = ambientLight.intensity;
 let ambientStartTimeout;
 let ambientResetTimeout;
+let senseModeActive = false;
 
 function setNightVision(enabled) {
     nightVisionEnabled = enabled;
@@ -84,8 +85,26 @@ function stopSobelEvent() {
     clearTimeout(ambientStartTimeout);
     clearTimeout(ambientResetTimeout);
 
+    senseModeActive = false;
     ambientLight.intensity = normalAmbientIntensity;
     postProcessing.setSobel(false);
+}
+
+let senseBlurTimeout;
+
+function triggerSenseBlur() {
+    canvas.classList.remove('sense-blur');
+
+    // Forces CSS to restart the animation if G is pressed again.
+    void canvas.offsetWidth;
+
+    canvas.classList.add('sense-blur');
+
+    clearTimeout(senseBlurTimeout);
+
+    senseBlurTimeout = setTimeout(() => {
+        canvas.classList.remove('sense-blur');
+    }, 4000);
 }
 
 window.addEventListener('keydown', (event) => {
@@ -106,18 +125,22 @@ window.addEventListener('keydown', (event) => {
         // Sobel event always exits night vision first.
         setNightVision(false);
 
-        postProcessing.triggerSobel(3);
+        postProcessing.triggerSobel(4);
+        triggerSenseBlur();
 
         clearTimeout(ambientStartTimeout);
         clearTimeout(ambientResetTimeout);
 
+        senseModeActive = true;
+
         ambientStartTimeout = setTimeout(() => {
             ambientLight.intensity = 8;
-        }, 300);
+        }, 400);
 
         ambientResetTimeout = setTimeout(() => {
             ambientLight.intensity = normalAmbientIntensity;
-        }, 3000);
+            senseModeActive = false;
+        }, 4000);
     }
 
     if (event.code === 'KeyK') {
@@ -166,6 +189,7 @@ function tick() {
     cameraHud.update(deltaTime);
     hotel.update(camera.position);
     junctionBox.trySpawn(hotel, camera.position);
+    cameraHud.updateObjective(camera, junctionBox, senseModeActive);
 
     stalker.trySpawn(hotel, camera.position);
     stalker.update(camera.position, deltaTime, hotel);

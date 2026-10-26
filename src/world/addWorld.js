@@ -14,7 +14,7 @@ export const addWorld = async (scene, camera) => {
         wallCollisions,
     });
 
-    const junctionBox = new JunctionBox()
+    const junctionBox = new JunctionBox();
 
     hotel.openStartEntrance('south');
 

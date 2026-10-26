@@ -311,6 +311,7 @@ export class Hotel {
 
         this.wallCollisions?.remove(wall);
 
+        node.group.remove(wall);
         wall.removeFromParent();
         node.walls.delete(direction);
     }
