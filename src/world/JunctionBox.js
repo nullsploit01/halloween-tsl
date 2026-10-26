@@ -71,4 +71,54 @@ export class JunctionBox {
         this.node = node;
         this.hasSpawned = true;
     }
+
+    spawn(hotel, playerPosition, maxDistance = 100) {
+        if (this.hasSpawned) return false
+
+        const minimumDistance = 10
+
+        const candidates = [...hotel.nodes.values()].filter((node) => {
+            const distance = node.position.distanceTo(playerPosition)
+
+            return (
+                node.activated &&
+                node.walls.size > 0 &&
+                distance >= minimumDistance &&
+                distance <= maxDistance
+            )
+        })
+
+        if (candidates.length === 0) {
+            console.warn('No valid junction-box wall exists within range yet.')
+            return false
+        }
+
+        const node = candidates[
+            Math.floor(Math.random() * candidates.length)
+        ]
+
+        const directions = [...node.walls.keys()]
+        const direction = directions[
+            Math.floor(Math.random() * directions.length)
+        ]
+
+        const offset = hotel.hallwayWidth * 0.5 - 0.08
+
+        const placement = {
+            north: { x: 0, z: -offset, rotationY: 0 },
+            south: { x: 0, z: offset, rotationY: Math.PI },
+            east: { x: offset, z: 0, rotationY: -Math.PI * 0.5 },
+            west: { x: -offset, z: 0, rotationY: Math.PI * 0.5 },
+        }[direction]
+
+        this.group.position.set(placement.x, 1.25, placement.z)
+        this.group.rotation.y = placement.rotationY
+
+        node.group.add(this.group)
+
+        this.node = node
+        this.hasSpawned = true
+
+        return true
+    }
 }

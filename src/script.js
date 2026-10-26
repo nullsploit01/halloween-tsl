@@ -146,6 +146,10 @@ window.addEventListener('keydown', (event) => {
     if (event.code === 'KeyK') {
         stalker.despawn();
     }
+
+    if (event.code === 'KeyJ') {
+        junctionBox.spawn(hotel, camera.position, 100)
+    }
 });
 
 const keys = new Set();
@@ -188,7 +192,6 @@ function tick() {
 
     cameraHud.update(deltaTime);
     hotel.update(camera.position);
-    junctionBox.trySpawn(hotel, camera.position);
     cameraHud.updateObjective(camera, junctionBox, senseModeActive);
 
     stalker.trySpawn(hotel, camera.position);
