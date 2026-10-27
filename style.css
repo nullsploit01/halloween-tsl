@@ -179,6 +179,57 @@ canvas.threejs.sense-blur {
     will-change: filter;
 }
 
+.system-message {
+    position: fixed;
+    bottom: 12%;
+    left: 50%;
+    z-index: 40;
+    max-width: 420px;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 80, 65, 0.45);
+    color: #ffd6cf;
+    background: rgba(12, 5, 5, 0.82);
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, 8px);
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
+}
+
+.system-message.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.interaction-hint {
+    position: fixed;
+    bottom: 12%;
+    left: 50%;
+    z-index: 30;
+    padding: 8px 12px;
+    color: #e8e4da;
+    background: rgba(0, 0, 0, 0.55);
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, 8px);
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
+}
+
+.interaction-hint.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
 @keyframes sense-blur {
     0% {
         filter: blur(7px) brightness(0.65);

@@ -20,7 +20,7 @@ export class ElevatorDoor {
         });
 
         this.indicatorMaterial = new THREE.MeshBasicMaterial({
-            color: 0x211313, // dark red / unpowered
+            color: 0xff3329, // dark red / unpowered
         });
 
         // Double doors.
@@ -51,16 +51,40 @@ export class ElevatorDoor {
 
         this.group.add(leftDoor, rightDoor, leftFrame, rightFrame, topFrame, indicator);
 
-        const glow = new THREE.PointLight(0x7dff9b, 1.5, 4, 2);
-        glow.position.set(0, 2.5, 0.45);
-
-        this.group.add(glow);
-
-        this.glow = new THREE.PointLight(0x7dff9b, 1.5, 4, 2);
+        this.glow = new THREE.PointLight(0xff2a1a, 1.5, 4, 2);
         this.glow.position.set(0, 2.5, 0.45);
-        this.glow.visible = false;
+        this.glow.visible = true;
 
         this.group.add(this.glow);
+
+        this.isPowered = false
+        this.worldPosition = new THREE.Vector3()
+
+        const callPanelMaterial = new THREE.MeshStandardNodeMaterial({
+            color: 0x292d2e,
+            roughness: 0.55,
+            metalness: 0.8,
+        })
+
+        this.callButtonMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff3329,
+        })
+
+        const callPanel = new THREE.Mesh(
+            new THREE.BoxGeometry(0.32, 0.55, 0.1),
+            callPanelMaterial,
+        )
+
+        const callButton = new THREE.Mesh(
+            new THREE.SphereGeometry(0.07, 16, 16),
+            this.callButtonMaterial,
+        )
+
+        // Local +Z is the visible/front side of the elevator.
+        callPanel.position.set(-1.5, 1.25, 0.12)
+        callButton.position.set(-1.5, 1.25, 0.2)
+
+        this.group.add(callPanel, callButton)
     }
 
     spawn(hotel, playerPosition, maxDistance = 100) {
@@ -140,10 +164,42 @@ export class ElevatorDoor {
     }
 
     setPowered(powered) {
-        if (!this.hasSpawned) return;
+        if (!this.hasSpawned) return
 
-        this.indicatorMaterial.color.setHex(powered ? 0x7dff9b : 0x211313);
+        this.isPowered = powered
 
-        this.glow.visible = powered;
+        if (powered) {
+            this.indicatorMaterial.color.setHex(0x7dff9b)
+            this.callButtonMaterial.color.setHex(0x7dff9b)
+
+            this.glow.color.setHex(0x7dff9b)
+            this.glow.intensity = 1.5
+        } else {
+            this.indicatorMaterial.color.setHex(0xff3329)
+            this.callButtonMaterial.color.setHex(0xff3329)
+
+            this.glow.color.setHex(0xff2a1a)
+            this.glow.intensity = 1.2
+        }
+
+        this.glow.visible = true
+    }
+
+    isPlayerNearby(playerPosition) {
+        this.group.getWorldPosition(this.worldPosition)
+
+        return this.worldPosition.distanceTo(playerPosition) <= 2.6
+    }
+
+    call(playerPosition) {
+        if (!this.hasSpawned || !this.isPlayerNearby(playerPosition)) {
+            return null
+        }
+
+        if (!this.isPowered) {
+            return 'ELEVATOR POWER OFF — RESTORE 3 JUNCTION BOXES'
+        }
+
+        return 'ELEVATOR CALLED'
     }
 }
