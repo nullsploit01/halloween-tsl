@@ -57,34 +57,31 @@ export class ElevatorDoor {
 
         this.group.add(this.glow);
 
-        this.isPowered = false
-        this.worldPosition = new THREE.Vector3()
+        this.isPowered = false;
+        this.worldPosition = new THREE.Vector3();
 
         const callPanelMaterial = new THREE.MeshStandardNodeMaterial({
             color: 0x292d2e,
             roughness: 0.55,
             metalness: 0.8,
-        })
+        });
 
         this.callButtonMaterial = new THREE.MeshBasicMaterial({
             color: 0xff3329,
-        })
+        });
 
-        const callPanel = new THREE.Mesh(
-            new THREE.BoxGeometry(0.32, 0.55, 0.1),
-            callPanelMaterial,
-        )
+        const callPanel = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.55, 0.1), callPanelMaterial);
 
         const callButton = new THREE.Mesh(
             new THREE.SphereGeometry(0.07, 16, 16),
             this.callButtonMaterial,
-        )
+        );
 
         // Local +Z is the visible/front side of the elevator.
-        callPanel.position.set(-1.5, 1.25, 0.12)
-        callButton.position.set(-1.5, 1.25, 0.2)
+        callPanel.position.set(-1.5, 1.25, 0.12);
+        callButton.position.set(-1.5, 1.25, 0.2);
 
-        this.group.add(callPanel, callButton)
+        this.group.add(callPanel, callButton);
     }
 
     spawn(hotel, playerPosition, maxDistance = 100) {
@@ -164,42 +161,42 @@ export class ElevatorDoor {
     }
 
     setPowered(powered) {
-        if (!this.hasSpawned) return
+        if (!this.hasSpawned) return;
 
-        this.isPowered = powered
+        this.isPowered = powered;
 
         if (powered) {
-            this.indicatorMaterial.color.setHex(0x7dff9b)
-            this.callButtonMaterial.color.setHex(0x7dff9b)
+            this.indicatorMaterial.color.setHex(0x7dff9b);
+            this.callButtonMaterial.color.setHex(0x7dff9b);
 
-            this.glow.color.setHex(0x7dff9b)
-            this.glow.intensity = 1.5
+            this.glow.color.setHex(0x7dff9b);
+            this.glow.intensity = 1.5;
         } else {
-            this.indicatorMaterial.color.setHex(0xff3329)
-            this.callButtonMaterial.color.setHex(0xff3329)
+            this.indicatorMaterial.color.setHex(0xff3329);
+            this.callButtonMaterial.color.setHex(0xff3329);
 
-            this.glow.color.setHex(0xff2a1a)
-            this.glow.intensity = 1.2
+            this.glow.color.setHex(0xff2a1a);
+            this.glow.intensity = 1.2;
         }
 
-        this.glow.visible = true
+        this.glow.visible = true;
     }
 
     isPlayerNearby(playerPosition) {
-        this.group.getWorldPosition(this.worldPosition)
+        this.group.getWorldPosition(this.worldPosition);
 
-        return this.worldPosition.distanceTo(playerPosition) <= 2.6
+        return this.worldPosition.distanceTo(playerPosition) <= 2.6;
     }
 
     call(playerPosition) {
         if (!this.hasSpawned || !this.isPlayerNearby(playerPosition)) {
-            return null
+            return null;
         }
 
         if (!this.isPowered) {
-            return 'ELEVATOR POWER OFF — RESTORE 3 JUNCTION BOXES'
+            return 'ELEVATOR POWER OFF — RESTORE 3 JUNCTION BOXES';
         }
 
-        return 'ELEVATOR CALLED'
+        return 'ELEVATOR CALLED';
     }
 }

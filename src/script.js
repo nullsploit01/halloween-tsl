@@ -135,26 +135,26 @@ function spawnNextJunctionBox() {
     return true;
 }
 
-const systemMessage = document.createElement('div')
-systemMessage.className = 'system-message'
-document.body.append(systemMessage)
+const systemMessage = document.createElement('div');
+systemMessage.className = 'system-message';
+document.body.append(systemMessage);
 
-let systemMessageTimeout
+let systemMessageTimeout;
 
 function showSystemMessage(message) {
-    systemMessage.textContent = message
-    systemMessage.classList.add('is-visible')
+    systemMessage.textContent = message;
+    systemMessage.classList.add('is-visible');
 
-    clearTimeout(systemMessageTimeout)
+    clearTimeout(systemMessageTimeout);
 
     systemMessageTimeout = setTimeout(() => {
-        systemMessage.classList.remove('is-visible')
-    }, 2500)
+        systemMessage.classList.remove('is-visible');
+    }, 2500);
 }
 
-const interactionHint = document.createElement('div')
-interactionHint.className = 'interaction-hint'
-document.body.append(interactionHint)
+const interactionHint = document.createElement('div');
+interactionHint.className = 'interaction-hint';
+document.body.append(interactionHint);
 
 window.addEventListener('keydown', (event) => {
     if (event.repeat) return;
@@ -197,21 +197,19 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.code === 'KeyE') {
-         const startedBox = activeJunctionBox?.beginActivation(
-            camera.position,
-        )
+        const startedBox = activeJunctionBox?.beginActivation(camera.position);
 
-        if (startedBox) return
+        if (startedBox) return;
 
-        const elevatorMessage = elevatorDoor.call(camera.position)
+        const elevatorMessage = elevatorDoor.call(camera.position);
 
-        if (!elevatorMessage) return
+        if (!elevatorMessage) return;
 
         if (!elevatorDoor.isPowered && junctionBoxes.length === 0) {
-            spawnNextJunctionBox()
+            spawnNextJunctionBox();
         }
-        
-        showSystemMessage(elevatorMessage)
+
+        showSystemMessage(elevatorMessage);
     }
 });
 
@@ -296,10 +294,10 @@ function tick() {
     }
 
     if (elevatorDoor.isPlayerNearby(camera.position)) {
-        interactionHint.textContent = 'PRESS [E] — CALL ELEVATOR'
-        interactionHint.classList.add('is-visible')
+        interactionHint.textContent = 'PRESS [E] — CALL ELEVATOR';
+        interactionHint.classList.add('is-visible');
     } else {
-        interactionHint.classList.remove('is-visible')
+        interactionHint.classList.remove('is-visible');
     }
 
     stalker.trySpawn(hotel, camera.position);
