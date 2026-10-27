@@ -196,10 +196,6 @@ window.addEventListener('keydown', (event) => {
         stalker.despawn();
     }
 
-    if (event.code === 'KeyJ') {
-        spawnNextJunctionBox();
-    }
-
     if (event.code === 'KeyE') {
          const startedBox = activeJunctionBox?.beginActivation(
             camera.position,
@@ -209,9 +205,13 @@ window.addEventListener('keydown', (event) => {
 
         const elevatorMessage = elevatorDoor.call(camera.position)
 
-        if (elevatorMessage) {
-            showSystemMessage(elevatorMessage)
+        if (!elevatorMessage) return
+
+        if (!elevatorDoor.isPowered && junctionBoxes.length === 0) {
+            spawnNextJunctionBox()
         }
+        
+        showSystemMessage(elevatorMessage)
     }
 });
 
