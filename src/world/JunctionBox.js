@@ -42,70 +42,39 @@ export class JunctionBox {
         this.worldPosition = new THREE.Vector3();
     }
 
-    trySpawn(hotel, playerPosition) {
-        if (this.hasSpawned) return;
-
-        const candidates = [...hotel.nodes.values()].filter((node) => {
-            const distance = node.position.distanceTo(playerPosition);
-
-            return node.activated && node.walls.size > 0 && distance > 6 && distance < 20;
-        });
-
-        if (candidates.length === 0) return;
-
-        const node = candidates[Math.floor(Math.random() * candidates.length)];
-
-        const directions = [...node.walls.keys()];
-        const direction = directions[Math.floor(Math.random() * directions.length)];
-
-        const offset = hotel.hallwayWidth * 0.5 - 0.08;
-
-        const placement = {
-            // Box faces inward, toward the centre of the junction.
-            north: { x: 0, z: -offset, rotationY: 0 },
-            south: { x: 0, z: offset, rotationY: Math.PI },
-
-            // These were reversed.
-            east: { x: offset, z: 0, rotationY: -Math.PI * 0.5 },
-            west: { x: -offset, z: 0, rotationY: Math.PI * 0.5 },
-        }[direction];
-
-        this.group.position.set(placement.x, 1.25, placement.z);
-
-        this.group.rotation.y = placement.rotationY;
-
-        // Attach it to the junction, so it stays in the correct world location.
-        node.group.add(this.group);
-
-        this.node = node;
-        this.hasSpawned = true;
-    }
-
     spawn(hotel, playerPosition, maxDistance = 100) {
         if (this.hasSpawned) return false;
 
         const minimumDistance = 10;
+        const candidates = [];
 
-        const candidates = [...hotel.nodes.values()].filter((node) => {
+        for (const node of hotel.nodes.values()) {
             const distance = node.position.distanceTo(playerPosition);
 
-            return (
-                node.activated &&
-                node.walls.size > 0 &&
-                distance >= minimumDistance &&
-                distance <= maxDistance
-            );
-        });
+            if (!node.activated || distance < minimumDistance || distance > maxDistance) {
+                continue;
+            }
+
+            for (const [direction, wall] of node.walls) {
+                // Ignore walls already removed for a corridor.
+                if (wall.parent !== node.group) continue;
+
+                // Do not place a box on an elevator-reserved wall.
+                if (node.reservedWalls?.has(direction)) continue;
+
+                candidates.push({ node, direction });
+            }
+        }
 
         if (candidates.length === 0) {
             console.warn('No valid junction-box wall exists within range yet.');
             return false;
         }
 
-        const node = candidates[Math.floor(Math.random() * candidates.length)];
+        const { node, direction } = candidates[Math.floor(Math.random() * candidates.length)];
 
-        const directions = [...node.walls.keys()];
-        const direction = directions[Math.floor(Math.random() * directions.length)];
+        // Prevent procedural generation from ever opening this wall.
+        hotel.reserveWall(node, direction);
 
         const offset = hotel.hallwayWidth * 0.5 - 0.08;
 

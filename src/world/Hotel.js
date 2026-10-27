@@ -172,6 +172,7 @@ export class Hotel {
             plannedExits: [],
             walls: new Map(),
             neighbors: new Map(),
+            reservedWalls: new Set(),
         };
 
         this.nodes.set(key, node);
@@ -237,6 +238,10 @@ export class Hotel {
     }
 
     connect(node, direction) {
+        if (node.reservedWalls?.has(direction)) {
+            return;
+        }
+
         const vector = DIRECTIONS[direction];
         const nextX = node.gridX + vector.x;
         const nextZ = node.gridZ + vector.z;
@@ -250,6 +255,11 @@ export class Hotel {
             opposite(direction),
             isStraight ? node.straightStreak + 1 : 0,
         );
+
+        // Also prevent another node from opening into the elevator endpoint.
+        if (childNode.reservedWalls?.has(opposite(direction))) {
+            return;
+        }
 
         // Opens both ends and fills the entire gap with a corridor.
         this.openSide(node, direction);
@@ -303,6 +313,8 @@ export class Hotel {
     }
 
     openSide(node, direction) {
+        if (node.reservedWalls?.has(direction)) return;
+
         const wall = node.walls.get(direction);
 
         if (!wall) {
@@ -465,7 +477,22 @@ export class Hotel {
         this.wallCollisions?.add(wall, axis, length);
     }
 
+    reserveWall(node, direction) {
+        node.reservedWalls.add(direction);
+    }
+
     movePlayer(position, movement, radius = 0.35) {
         this.wallCollisions?.move(position, movement, radius);
+    }
+
+    reserveElevatorNode(node) {
+        // Keep the side the player entered from open.
+        const entranceDirection = node.incomingDirection;
+
+        for (const direction of ['north', 'south', 'east', 'west']) {
+            if (direction !== entranceDirection) {
+                node.reservedWalls.add(direction);
+            }
+        }
     }
 }

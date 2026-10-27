@@ -7,6 +7,7 @@ import { Sizes } from './core/Sizes.js';
 import { createCameraHud } from './ui/createCameraHud.js';
 import { createJunctionBoxHud } from './ui/createJunctionBoxHud.js';
 import { addWorld } from './world/addWorld.js';
+import { ElevatorDoor } from './world/ElevatorDoor.js';
 import { JunctionBox } from './world/JunctionBox.js';
 import { Stalker } from './world/Stalker.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
@@ -18,8 +19,6 @@ const sizes = new Sizes();
 const scene = createScene();
 const camera = createCamera(sizes);
 const cameraHud = createCameraHud();
-
-scene.add(camera);
 
 // Player height, rather than the former scene-preview camera position.
 camera.position.set(0, 1.7, 0);
@@ -36,6 +35,10 @@ const postProcessing = createPostProcessing({
 const { ambientLight } = addLighting({ scene, renderer });
 
 const { lantern, hotel, lanternLight } = await addWorld(scene, camera);
+
+let activatedBoxCount = 0;
+const elevatorDoor = new ElevatorDoor(scene);
+scene.add(camera);
 
 const stalker = new Stalker(scene, {
     agroDistance: 10,
@@ -114,6 +117,7 @@ const junctionBoxHud = createJunctionBoxHud();
 const junctionBoxes = [];
 const maxJunctionBoxes = 3;
 let activeJunctionBox = null;
+let senseTarget = null;
 
 function spawnNextJunctionBox() {
     if (junctionBoxes.length >= maxJunctionBoxes) return false;
@@ -126,6 +130,7 @@ function spawnNextJunctionBox() {
 
     junctionBoxes.push(box);
     activeJunctionBox = box;
+    senseTarget = box;
 
     return true;
 }
@@ -235,15 +240,27 @@ function tick() {
 
     cameraHud.update(deltaTime);
     hotel.update(camera.position);
-    cameraHud.updateObjective(camera, activeJunctionBox, senseModeActive);
+    if (!elevatorDoor.hasSpawned) {
+        elevatorDoor.spawn(hotel, camera.position, 100);
+    }
+    cameraHud.updateObjective(camera, senseTarget, senseModeActive);
 
     const wasActivated = activeJunctionBox?.update(camera.position, deltaTime);
 
     junctionBoxHud.update(camera, activeJunctionBox);
 
     if (wasActivated) {
+        activatedBoxCount += 1;
+
         setTimeout(() => {
-            spawnNextJunctionBox();
+            if (activatedBoxCount < maxJunctionBoxes) {
+                spawnNextJunctionBox();
+                return;
+            }
+
+            elevatorDoor.setPowered(true);
+            senseTarget = elevatorDoor;
+            activeJunctionBox = null;
         }, 900);
     }
 
