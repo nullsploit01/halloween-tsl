@@ -1,6 +1,7 @@
 import { createFluorescentLight } from './createLighting';
 import { createTiledFloorGeometry } from './createTiledFloorGeometry';
 import * as THREE from 'three/webgpu';
+import { createHotelDoor } from './createHotelDoor';
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -43,21 +44,102 @@ function relativeDirection(forward, relative) {
     return forward;
 }
 
-function createBoxWall({ length, height, axis, material }) {
+function createBoxWall({
+    length,
+    height,
+    axis,
+    material,
+    addTrim = true,
+    doorOffset = null,
+    doorFrameWidth = 1.69,
+}) {
     const geometry = new THREE.PlaneGeometry(length, height);
 
-    // A plane starts along X/Y. Rotate it when the wall runs along Z.
     if (axis === 'z') {
         geometry.rotateY(Math.PI * 0.5);
     }
 
-    const wall = new THREE.Mesh(geometry, material);
+    const wall = new THREE.Group();
 
-    wall.castShadow = true;
-    wall.receiveShadow = false;
+    const surface = new THREE.Mesh(geometry, material);
+    surface.castShadow = true;
+    surface.receiveShadow = true;
+    wall.add(surface);
+
+    if (!addTrim) return wall;
+
+    const trimMaterial = new THREE.MeshStandardMaterial({
+        color: 0x302720,
+        roughness: 0.82,
+        metalness: 0.0,
+    });
+
+    const railMaterial = new THREE.MeshStandardMaterial({
+        color: 0x4a382c,
+        roughness: 0.72,
+        metalness: 0.0,
+    });
+
+    // Baseboard.
+    const baseboard = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            axis === 'z' ? 0.09 : length,
+            0.18,
+            axis === 'z' ? length : 0.09,
+        ),
+        trimMaterial,
+    );
+
+    baseboard.position.y = 0.09 - height / 2;
+    wall.add(baseboard);
+
+    const railHeight = 0.09;
+    const railY = height * 0.42 - height / 2;
+
+    const addRailSegment = (segmentLength, center) => {
+        if (segmentLength <= 0.01) return;
+
+        const rail = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                axis === 'z' ? 0.07 : segmentLength,
+                railHeight,
+                axis === 'z' ? segmentLength : 0.07,
+            ),
+            railMaterial,
+        );
+
+        rail.position.set(
+            axis === 'z' ? 0 : center,
+            railY,
+            axis === 'z' ? center : 0,
+        );
+
+        wall.add(rail);
+    };
+
+    if (doorOffset == null) {
+        addRailSegment(length, 0);
+    } else {
+        const halfGap = doorFrameWidth / 2 + 0.05;
+
+        const leftLength = length / 2 + doorOffset - halfGap;
+        const rightLength = length / 2 - doorOffset - halfGap;
+
+        addRailSegment(
+            leftLength,
+            -length / 2 + leftLength / 2,
+        );
+
+        addRailSegment(
+            rightLength,
+            doorOffset + halfGap + rightLength / 2,
+        );
+    }
 
     return wall;
 }
+
+
 
 export class Hotel {
     constructor(scene, options = {}) {
@@ -77,14 +159,15 @@ export class Hotel {
 
         this.floorMaterial = new THREE.MeshStandardNodeMaterial({
             color: 0xffffff,
-            roughness: 0.25,
-            metalness: 0.75,
+            roughness: 0.85,
+            metalness: 0.25,
             map: floorColorTexture,
         });
 
         this.ceilingMaterial = new THREE.MeshStandardNodeMaterial({
             color: 0x96958b,
             roughness: 0.95,
+            metalness: 0.25,
         });
 
         this.wallMaterial = new THREE.MeshStandardNodeMaterial({
@@ -389,13 +472,28 @@ export class Hotel {
 
         group.userData.lights = corridorLights;
 
+        const doorWidth = 2;
+        const endMargin = 2.0;
+        const doorProbability = 0.8;
+
         for (const side of [-1, 1]) {
+            const hasDoor = Math.random() < doorProbability;
+
+            const maxOffset =
+                corridorLength / 2 - doorWidth / 2 - endMargin;
+
+            const doorOffset = hasDoor && maxOffset > 0
+                ? THREE.MathUtils.randFloat(-maxOffset, maxOffset)
+                : null;
+
             const wall = this.wallFactory({
                 length: corridorLength,
                 height: this.hallwayHeight,
                 thickness: 0.2,
                 axis: isVertical ? 'z' : 'x',
                 material: this.wallMaterial,
+                doorOffset,
+                doorFrameWidth: doorWidth,
             });
 
             wall.position.y = this.hallwayHeight * 0.5;
@@ -408,8 +506,36 @@ export class Hotel {
 
             group.add(wall);
 
-            this.registerWall(wall, isVertical ? 'z' : 'x', corridorLength);
+            this.registerWall(
+                wall,
+                isVertical ? 'z' : 'x',
+                corridorLength,
+            );
+
+            if (doorOffset !== null) {
+                const door = createHotelDoor(
+                    String(Math.floor(100 + Math.random() * 900)),
+                );
+
+                if (isVertical) {
+                    door.position.set(
+                        side * (this.hallwayWidth / 2 + 0.025),
+                        0,
+                        doorOffset,
+                    );
+                    door.rotation.y = Math.PI / 2;
+                } else {
+                    door.position.set(
+                        doorOffset,
+                        0,
+                        side * (this.hallwayWidth / 2 + 0.025),
+                    );
+                }
+
+                group.add(door);
+            }
         }
+
 
         this.scene.add(group);
         this.corridors.set(corridorKey, group);
