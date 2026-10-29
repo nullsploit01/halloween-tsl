@@ -33,5 +33,15 @@ export async function addLantern(camera) {
     // Keep your model-specific correction.
     lantern.rotation.set(0, -Math.PI * 0.5, 0);
 
-    return { lantern, lanternLight };
+    lantern.visible = false;
+
+    return {
+        lantern,
+        lanternLight,
+
+        setVisible(visible) {
+            lantern.visible = visible;
+            lanternLight.visible = visible;
+        },
+    };
 }

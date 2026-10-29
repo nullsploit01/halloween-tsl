@@ -37,7 +37,7 @@ const postProcessing = createPostProcessing({
 
 const { ambientLight } = addLighting({ scene, renderer });
 
-const { lantern, hotel, lanternLight } = await addWorld(scene, camera);
+const { lantern, hotel, lanternLight, setLanternVisible } = await addWorld(scene, camera);
 
 let activatedBoxCount = 0;
 const elevatorDoor = new ElevatorDoor(scene);
@@ -84,8 +84,8 @@ function setNightVision(enabled) {
     postProcessing.setNightVision(enabled);
     nightVisionLight.visible = enabled;
 
-    lantern.visible = !enabled;
-    lanternLight.visible = !enabled;
+    lantern.visible = !enabled && !hotel.corridorLightsEnabled;
+    lanternLight.visible = !enabled && !hotel.corridorLightsEnabled;
     cameraHud.setVisible(enabled);
 }
 

@@ -28,7 +28,13 @@ export const addWorld = async (scene, camera) => {
     camera.position.copy(startingRoom.spawnPosition);
     camera.lookAt(startingRoom.doorwayLookAt);
 
-    const { lantern, lanternLight } = await addLantern(camera, scene);
+    const lantern = await addLantern(camera, scene);
 
-    return { lantern, lanternLight, hotel, junctionBox };
+    return { 
+        hotel, 
+        junctionBox,
+        lantern: lantern.lantern, 
+        lanternLight: lantern.lanternLight, 
+        setLanternVisible: lantern.setVisible,
+    };
 };
