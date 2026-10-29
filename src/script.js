@@ -246,6 +246,10 @@ window.addEventListener('keydown', (event) => {
     if (event.code === 'KeyE') {
         handleInteraction()
     }
+
+    if (event.code === 'KeyM') {
+        stalker.spawn(hotel, camera.position)
+    }
 });
 
 const keys = new Set();
@@ -332,7 +336,6 @@ function tick() {
 
     updateInteractionHint();
 
-    stalker.trySpawn(hotel, camera.position);
     stalker.update(camera.position, deltaTime, hotel);
 
     postProcessing.update(deltaTime);
