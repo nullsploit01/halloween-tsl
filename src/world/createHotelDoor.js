@@ -1,4 +1,3 @@
-
 import * as THREE from 'three/webgpu';
 
 const doorMaterial = new THREE.MeshStandardNodeMaterial({
@@ -34,10 +33,7 @@ export function createHotelDoor(roomNumber = '214') {
     const frameWidth = 0.075;
 
     // Main door slab.
-    const slab = new THREE.Mesh(
-        new THREE.BoxGeometry(width, height, depth),
-        doorMaterial,
-    );
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), doorMaterial);
 
     slab.position.y = height / 2;
     slab.castShadow = true;
@@ -45,10 +41,7 @@ export function createHotelDoor(roomNumber = '214') {
     door.add(slab);
 
     // Frame posts.
-    for (const x of [
-        -width / 2 - frameWidth / 2,
-        width / 2 + frameWidth / 2,
-    ]) {
+    for (const x of [-width / 2 - frameWidth / 2, width / 2 + frameWidth / 2]) {
         const post = new THREE.Mesh(
             new THREE.BoxGeometry(frameWidth, height + 0.08, 0.14),
             frameMaterial,
@@ -73,10 +66,7 @@ export function createHotelDoor(roomNumber = '214') {
         { y: 1.68, h: 0.72 },
         { y: 0.67, h: 0.78 },
     ]) {
-        const panel = new THREE.Mesh(
-            new THREE.BoxGeometry(width - 0.22, h, 0.018),
-            panelMaterial,
-        );
+        const panel = new THREE.Mesh(new THREE.BoxGeometry(width - 0.22, h, 0.018), panelMaterial);
 
         panel.position.set(0, y, depth / 2 + 0.009);
         door.add(panel);
@@ -88,46 +78,29 @@ export function createHotelDoor(roomNumber = '214') {
 
         for (const side of [-1, 1]) {
             const border = new THREE.Mesh(
-                new THREE.BoxGeometry(
-                    borderThickness,
-                    h + borderThickness,
-                    borderDepth,
-                ),
+                new THREE.BoxGeometry(borderThickness, h + borderThickness, borderDepth),
                 borderMaterial,
             );
 
-            border.position.set(
-                side * (width / 2 - 0.11),
-                y,
-                depth / 2 + 0.018,
-            );
+            border.position.set(side * (width / 2 - 0.11), y, depth / 2 + 0.018);
 
             door.add(border);
         }
     }
 
     // Handle and backplate.
-    const handlePlate = new THREE.Mesh(
-        new THREE.BoxGeometry(0.09, 0.18, 0.025),
-        frameMaterial,
-    );
+    const handlePlate = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.18, 0.025), frameMaterial);
 
     handlePlate.position.set(0.39, 1.0, depth / 2 + 0.02);
     door.add(handlePlate);
 
-    const handle = new THREE.Mesh(
-        new THREE.SphereGeometry(0.035, 12, 8),
-        handleMaterial,
-    );
+    const handle = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8), handleMaterial);
 
     handle.position.set(0.39, 1.0, depth / 2 + 0.06);
     door.add(handle);
 
     // Room-number plaque above the handle area.
-    const plaque = new THREE.Mesh(
-        new THREE.BoxGeometry(0.3, 0.12, 0.025),
-        handleMaterial,
-    );
+    const plaque = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.025), handleMaterial);
 
     plaque.position.set(0, 2.05, depth / 2 + 0.02);
     door.add(plaque);

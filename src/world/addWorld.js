@@ -30,11 +30,11 @@ export const addWorld = async (scene, camera) => {
 
     const lantern = await addLantern(camera, scene);
 
-    return { 
-        hotel, 
+    return {
+        hotel,
         junctionBox,
-        lantern: lantern.lantern, 
-        lanternLight: lantern.lanternLight, 
+        lantern: lantern.lantern,
+        lanternLight: lantern.lanternLight,
         setLanternVisible: lantern.setVisible,
     };
 };

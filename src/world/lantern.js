@@ -1,4 +1,3 @@
-
 import { GLTFLoader } from 'three/addons/Addons.js';
 import * as THREE from 'three/webgpu';
 
@@ -20,12 +19,7 @@ export async function addLantern(camera) {
     // Attach to the camera for FPS positioning.
     camera.add(lantern);
 
-    const lanternLight = new THREE.PointLight(
-        0xff9a45,
-        3.5,
-        10,
-        2,
-    );
+    const lanternLight = new THREE.PointLight(0xff9a45, 3.5, 10, 2);
 
     lanternLight.position.set(10, 10.35, -30);
     lanternLight.castShadow = true;
@@ -33,11 +27,7 @@ export async function addLantern(camera) {
 
     lantern.add(lanternLight);
 
-    const restingPosition = new THREE.Vector3(
-        0.32,
-        -0.55,
-        -0.95,
-    );
+    const restingPosition = new THREE.Vector3(0.32, -0.55, -0.95);
 
     // Start below the player's view.
     const hiddenPosition = restingPosition.clone();
@@ -59,10 +49,7 @@ export async function addLantern(camera) {
         }
     }
 
-    function show({
-        duration = 650,
-        animate = true,
-    } = {}) {
+    function show({ duration = 650, animate = true } = {}) {
         cancelAnimation();
 
         const token = animationToken;
@@ -82,20 +69,12 @@ export async function addLantern(camera) {
         function tick(now) {
             if (token !== animationToken) return;
 
-            const t = THREE.MathUtils.clamp(
-                (now - startTime) / duration,
-                0,
-                1,
-            );
+            const t = THREE.MathUtils.clamp((now - startTime) / duration, 0, 1);
 
             // Smooth ease-out.
             const eased = 1 - Math.pow(1 - t, 3);
 
-            lantern.position.lerpVectors(
-                hiddenPosition,
-                restingPosition,
-                eased,
-            );
+            lantern.position.lerpVectors(hiddenPosition, restingPosition, eased);
 
             // Small final settling motion.
             const settle = Math.sin(t * Math.PI) * 0.025;

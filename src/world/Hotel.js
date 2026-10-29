@@ -1,7 +1,7 @@
+import { createHotelDoor } from './createHotelDoor';
 import { createFluorescentLight } from './createLighting';
 import { createTiledFloorGeometry } from './createTiledFloorGeometry';
 import * as THREE from 'three/webgpu';
-import { createHotelDoor } from './createHotelDoor';
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -82,11 +82,7 @@ function createBoxWall({
 
     // Baseboard.
     const baseboard = new THREE.Mesh(
-        new THREE.BoxGeometry(
-            axis === 'z' ? 0.09 : length,
-            0.18,
-            axis === 'z' ? length : 0.09,
-        ),
+        new THREE.BoxGeometry(axis === 'z' ? 0.09 : length, 0.18, axis === 'z' ? length : 0.09),
         trimMaterial,
     );
 
@@ -108,11 +104,7 @@ function createBoxWall({
             railMaterial,
         );
 
-        rail.position.set(
-            axis === 'z' ? 0 : center,
-            railY,
-            axis === 'z' ? center : 0,
-        );
+        rail.position.set(axis === 'z' ? 0 : center, railY, axis === 'z' ? center : 0);
 
         wall.add(rail);
     };
@@ -125,21 +117,13 @@ function createBoxWall({
         const leftLength = length / 2 + doorOffset - halfGap;
         const rightLength = length / 2 - doorOffset - halfGap;
 
-        addRailSegment(
-            leftLength,
-            -length / 2 + leftLength / 2,
-        );
+        addRailSegment(leftLength, -length / 2 + leftLength / 2);
 
-        addRailSegment(
-            rightLength,
-            doorOffset + halfGap + rightLength / 2,
-        );
+        addRailSegment(rightLength, doorOffset + halfGap + rightLength / 2);
     }
 
     return wall;
 }
-
-
 
 export class Hotel {
     constructor(scene, options = {}) {
@@ -479,12 +463,10 @@ export class Hotel {
         for (const side of [-1, 1]) {
             const hasDoor = Math.random() < doorProbability;
 
-            const maxOffset =
-                corridorLength / 2 - doorWidth / 2 - endMargin;
+            const maxOffset = corridorLength / 2 - doorWidth / 2 - endMargin;
 
-            const doorOffset = hasDoor && maxOffset > 0
-                ? THREE.MathUtils.randFloat(-maxOffset, maxOffset)
-                : null;
+            const doorOffset =
+                hasDoor && maxOffset > 0 ? THREE.MathUtils.randFloat(-maxOffset, maxOffset) : null;
 
             const wall = this.wallFactory({
                 length: corridorLength,
@@ -506,36 +488,29 @@ export class Hotel {
 
             group.add(wall);
 
-            this.registerWall(
-                wall,
-                isVertical ? 'z' : 'x',
-                corridorLength,
-            );
+            this.registerWall(wall, isVertical ? 'z' : 'x', corridorLength);
 
             if (doorOffset !== null) {
-                const door = createHotelDoor(
-                    String(Math.floor(100 + Math.random() * 900)),
-                );
+                const door = createHotelDoor(String(Math.floor(100 + Math.random() * 900)));
+
+                const wallOffset = this.hallwayWidth / 2 + 0.025;
 
                 if (isVertical) {
-                    door.position.set(
-                        side * (this.hallwayWidth / 2 + 0.025),
-                        0,
-                        doorOffset,
-                    );
-                    door.rotation.y = Math.PI / 2;
+                    // Corridor runs along Z. Walls are on the left and right.
+                    door.position.set(side * wallOffset, 0, doorOffset);
+
+                    // Opposite walls need opposite orientations.
+                    door.rotation.y = side === -1 ? Math.PI / 2 : -Math.PI / 2;
                 } else {
-                    door.position.set(
-                        doorOffset,
-                        0,
-                        side * (this.hallwayWidth / 2 + 0.025),
-                    );
+                    // Corridor runs along X. Walls are on the front and back.
+                    door.position.set(doorOffset, 0, side * wallOffset);
+
+                    door.rotation.y = side === -1 ? 0 : Math.PI;
                 }
 
                 group.add(door);
             }
         }
-
 
         this.scene.add(group);
         this.corridors.set(corridorKey, group);
