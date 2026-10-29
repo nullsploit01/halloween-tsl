@@ -1,3 +1,4 @@
+
 import { GLTFLoader } from 'three/addons/Addons.js';
 import * as THREE from 'three/webgpu';
 
@@ -16,32 +17,122 @@ export async function addLantern(camera) {
         }
     });
 
+    // Attach to the camera for FPS positioning.
     camera.add(lantern);
 
-    const lanternLight = new THREE.PointLight(0xff9a45, 3.5, 10, 2);
+    const lanternLight = new THREE.PointLight(
+        0xff9a45,
+        3.5,
+        10,
+        2,
+    );
 
     lanternLight.position.set(10, 10.35, -30);
-
     lanternLight.castShadow = true;
     lanternLight.shadow.mapSize.set(512, 512);
 
     lantern.add(lanternLight);
 
-    // Local position: right/left, up/down, forward/back from the camera.
-    lantern.position.set(0.32, -0.55, -0.95);
+    const restingPosition = new THREE.Vector3(
+        0.32,
+        -0.55,
+        -0.95,
+    );
 
-    // Keep your model-specific correction.
+    // Start below the player's view.
+    const hiddenPosition = restingPosition.clone();
+    hiddenPosition.y -= 0.8;
+
     lantern.rotation.set(0, -Math.PI * 0.5, 0);
-
+    lantern.position.copy(hiddenPosition);
     lantern.visible = false;
+
+    let animationFrame = null;
+    let animationToken = 0;
+
+    function cancelAnimation() {
+        animationToken++;
+
+        if (animationFrame !== null) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = null;
+        }
+    }
+
+    function show({
+        duration = 650,
+        animate = true,
+    } = {}) {
+        cancelAnimation();
+
+        const token = animationToken;
+
+        lantern.visible = true;
+        lanternLight.visible = true;
+
+        if (!animate) {
+            lantern.position.copy(restingPosition);
+            return;
+        }
+
+        lantern.position.copy(hiddenPosition);
+
+        const startTime = performance.now();
+
+        function tick(now) {
+            if (token !== animationToken) return;
+
+            const t = THREE.MathUtils.clamp(
+                (now - startTime) / duration,
+                0,
+                1,
+            );
+
+            // Smooth ease-out.
+            const eased = 1 - Math.pow(1 - t, 3);
+
+            lantern.position.lerpVectors(
+                hiddenPosition,
+                restingPosition,
+                eased,
+            );
+
+            // Small final settling motion.
+            const settle = Math.sin(t * Math.PI) * 0.025;
+            lantern.position.y += settle;
+
+            if (t < 1) {
+                animationFrame = requestAnimationFrame(tick);
+            } else {
+                lantern.position.copy(restingPosition);
+                animationFrame = null;
+            }
+        }
+
+        animationFrame = requestAnimationFrame(tick);
+    }
+
+    function hide() {
+        cancelAnimation();
+
+        lantern.visible = false;
+        lanternLight.visible = false;
+        lantern.position.copy(hiddenPosition);
+    }
 
     return {
         lantern,
         lanternLight,
 
-        setVisible(visible) {
-            lantern.visible = visible;
-            lanternLight.visible = visible;
+        show,
+        hide,
+
+        setVisible(visible, options = {}) {
+            if (visible) {
+                show(options);
+            } else {
+                hide();
+            }
         },
     };
 }
