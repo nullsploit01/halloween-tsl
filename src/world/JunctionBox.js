@@ -35,7 +35,7 @@ export class JunctionBox {
         this.state = 'off'; // off | activating | on
         this.activationTime = 0;
         this.activationDuration = 4;
-        this.interactionDistance = 2.4;
+        this.interactionDistance = 3.0;
 
         this.warningLight = warningLight;
         this.beacon = beacon;

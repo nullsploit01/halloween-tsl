@@ -185,7 +185,7 @@ export class ElevatorDoor {
     isPlayerNearby(playerPosition) {
         this.group.getWorldPosition(this.worldPosition);
 
-        return this.worldPosition.distanceTo(playerPosition) <= 2.6;
+        return this.worldPosition.distanceTo(playerPosition) <= 3.3;
     }
 
     call(playerPosition) {
