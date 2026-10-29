@@ -1,3 +1,4 @@
+import { createFluorescentLight } from './createLighting';
 import { createTiledFloorGeometry } from './createTiledFloorGeometry';
 import * as THREE from 'three/webgpu';
 
@@ -62,6 +63,7 @@ export class Hotel {
     constructor(scene, options = {}) {
         this.scene = scene;
 
+        this.corridorLightsEnabled = true;
         this.ceilingThickness = 0.15;
         this.hallwayWidth = options.hallwayWidth ?? 6;
         this.hallwayHeight = options.hallwayHeight ?? 3;
@@ -363,6 +365,30 @@ export class Hotel {
             isVertical ? corridorLength : this.hallwayWidth,
         );
 
+        const lightOffsets = [-corridorLength / 4, 0, corridorLength / 4];
+        const corridorLights = [];
+
+        for (const offset of lightOffsets) {
+            const fixture = createFluorescentLight({
+                hallwayHeight: this.hallwayHeight,
+                intensity: 12,
+                distance: 9,
+            });
+
+            if (isVertical) {
+                fixture.group.position.z = offset;
+            } else {
+                fixture.group.position.x = offset;
+            }
+
+            fixture.setEnabled(this.corridorLightsEnabled);
+
+            group.add(fixture.group);
+            corridorLights.push(fixture);
+        }
+
+        group.userData.lights = corridorLights;
+
         for (const side of [-1, 1]) {
             const wall = this.wallFactory({
                 length: corridorLength,
@@ -492,6 +518,20 @@ export class Hotel {
         for (const direction of ['north', 'south', 'east', 'west']) {
             if (direction !== entranceDirection) {
                 node.reservedWalls.add(direction);
+            }
+        }
+    }
+
+    setCorridorLights(enabled, corridorKey = null) {
+        this.corridorLightsEnabled = enabled;
+
+        const corridors = corridorKey
+            ? [this.corridors.get(corridorKey)].filter(Boolean)
+            : this.corridors.values();
+
+        for (const corridor of corridors) {
+            for (const fixture of corridor.userData.lights ?? []) {
+                fixture.setEnabled(enabled);
             }
         }
     }

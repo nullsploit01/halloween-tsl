@@ -26,8 +26,8 @@ export class Stalker {
 
         this.patrolSpeed = 0.7;
         this.patrolDirection = new THREE.Vector3();
-        this.isDirectChasing = false
-        this.corridorPadding = 0.35
+        this.isDirectChasing = false;
+        this.corridorPadding = 0.35;
     }
 
     async load() {
@@ -80,7 +80,6 @@ export class Stalker {
         this.playAnimation('Walk_calm');
 
         this.scene.add(this.model);
-
     }
 
     playAnimation(name, fadeDuration = 0.25) {
@@ -103,23 +102,23 @@ export class Stalker {
     }
 
     spawn(hotel, playerPosition) {
-        if (this.hasSpawned || !this.model) return false
+        if (this.hasSpawned || !this.model) return false;
 
-        const spawnNode = hotel.getStalkerSpawnNode(playerPosition)
+        const spawnNode = hotel.getStalkerSpawnNode(playerPosition);
 
-        if (!spawnNode) return false
+        if (!spawnNode) return false;
 
-        this.model.position.copy(spawnNode.position)
-        this.model.position.y = 0
+        this.model.position.copy(spawnNode.position);
+        this.model.position.y = 0;
 
-        this.currentNode = spawnNode
-        this.targetNode = null
-        this.previousNode = null
+        this.currentNode = spawnNode;
+        this.targetNode = null;
+        this.previousNode = null;
 
-        this.model.visible = true
-        this.hasSpawned = true
+        this.model.visible = true;
+        this.hasSpawned = true;
 
-        return true
+        return true;
     }
 
     update(playerPosition, deltaTime, hotel) {
@@ -182,33 +181,24 @@ export class Stalker {
                 }
             }
 
-            const canSeePlayerInCorridor = this.canDirectlyChase(
-                playerPosition,
-                hotel,
-            )
+            const canSeePlayerInCorridor = this.canDirectlyChase(playerPosition, hotel);
 
             if (canSeePlayerInCorridor) {
-                this.isDirectChasing = true
+                this.isDirectChasing = true;
 
                 // Follows the real player position, including left/right movement.
-                this.moveTowardPosition(
-                    playerPosition,
-                    this.chaseSpeed,
-                    deltaTime,
-                )
+                this.moveTowardPosition(playerPosition, this.chaseSpeed, deltaTime);
             } else {
                 // Player turned a corner: return to graph pathfinding.
                 if (this.isDirectChasing) {
-                    this.currentNode = hotel.getClosestNode(
-                        this.model.position,
-                    )
+                    this.currentNode = hotel.getClosestNode(this.model.position);
 
-                    this.targetNode = null
+                    this.targetNode = null;
                 }
 
-                this.isDirectChasing = false
+                this.isDirectChasing = false;
 
-                this.moveToTarget(this.chaseSpeed, deltaTime)
+                this.moveToTarget(this.chaseSpeed, deltaTime);
             }
         } else {
             this.playAnimation('Walk_calm');
@@ -289,10 +279,10 @@ export class Stalker {
     }
 
     isInsideCorridor(position, startNode, endNode, hallwayWidth) {
-        const halfWidth = hallwayWidth * 0.5 - this.corridorPadding
+        const halfWidth = hallwayWidth * 0.5 - this.corridorPadding;
 
-        const start = startNode.position
-        const end = endNode.position
+        const start = startNode.position;
+        const end = endNode.position;
 
         // North/south corridor.
         if (start.x === end.x) {
@@ -300,7 +290,7 @@ export class Stalker {
                 Math.abs(position.x - start.x) <= halfWidth &&
                 position.z >= Math.min(start.z, end.z) &&
                 position.z <= Math.max(start.z, end.z)
-            )
+            );
         }
 
         // East/west corridor.
@@ -308,64 +298,56 @@ export class Stalker {
             Math.abs(position.z - start.z) <= halfWidth &&
             position.x >= Math.min(start.x, end.x) &&
             position.x <= Math.max(start.x, end.x)
-        )
+        );
     }
 
     canDirectlyChase(playerPosition, hotel) {
-        if (!this.currentNode) return false
+        if (!this.currentNode) return false;
 
         const possibleCorridorEnds = new Set([
             ...this.currentNode.neighbors.values(),
             this.previousNode,
             this.targetNode,
-        ])
+        ]);
 
         for (const endNode of possibleCorridorEnds) {
-            if (!endNode) continue
+            if (!endNode) continue;
 
             const stalkerIsInside = this.isInsideCorridor(
                 this.model.position,
                 this.currentNode,
                 endNode,
                 hotel.hallwayWidth,
-            )
+            );
 
             const playerIsInside = this.isInsideCorridor(
                 playerPosition,
                 this.currentNode,
                 endNode,
                 hotel.hallwayWidth,
-            )
+            );
 
             if (stalkerIsInside && playerIsInside) {
-                return true
+                return true;
             }
         }
 
-        return false
+        return false;
     }
 
     moveTowardPosition(targetPosition, speed, deltaTime) {
-        const direction = new THREE.Vector3()
-            .subVectors(targetPosition, this.model.position)
+        const direction = new THREE.Vector3().subVectors(targetPosition, this.model.position);
 
-        direction.y = 0
+        direction.y = 0;
 
-        if (direction.lengthSq() === 0) return
+        if (direction.lengthSq() === 0) return;
 
-        direction.normalize()
+        direction.normalize();
 
-        this.model.position.addScaledVector(
-            direction,
-            speed * deltaTime,
-        )
+        this.model.position.addScaledVector(direction, speed * deltaTime);
 
-        const lookTarget = this.model.position.clone().add(direction)
+        const lookTarget = this.model.position.clone().add(direction);
 
-        this.model.lookAt(
-            lookTarget.x,
-            this.model.position.y,
-            lookTarget.z,
-        )
+        this.model.lookAt(lookTarget.x, this.model.position.y, lookTarget.z);
     }
 }

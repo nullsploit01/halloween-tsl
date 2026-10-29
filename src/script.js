@@ -10,6 +10,7 @@ import { ElevatorDoor } from './world/ElevatorDoor.js';
 import { JunctionBox } from './world/JunctionBox.js';
 import { Stalker } from './world/Stalker.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { ClusteredLighting } from 'three/examples/jsm/lighting/ClusteredLighting.js';
 import * as THREE from 'three/webgpu';
 
 const canvas = document.querySelector('canvas.threejs');
@@ -23,6 +24,9 @@ const cameraHud = createCameraHud();
 camera.position.set(0, 1.7, 0);
 
 const renderer = await createRenderer(canvas, sizes);
+
+renderer.lighting = new ClusteredLighting(256, 32, 24, 32);
+
 const controls = new PointerLockControls(camera, document.body);
 
 const postProcessing = createPostProcessing({
@@ -154,53 +158,49 @@ interactionHint.className = 'interaction-hint';
 document.body.append(interactionHint);
 
 function updateInteractionHint() {
-    let text = ''
+    let text = '';
 
     if (activeJunctionBox?.isPlayerNearby(camera.position)) {
         if (activeJunctionBox.state === 'off') {
-            text = 'PRESS [E] — RESTORE POWER'
+            text = 'PRESS [E] — RESTORE POWER';
         }
 
         if (activeJunctionBox.state === 'activating') {
-            const percent = Math.round(
-                activeJunctionBox.activationProgress * 100,
-            )
+            const percent = Math.round(activeJunctionBox.activationProgress * 100);
 
-            text = `RESTORING POWER ${percent}%`
+            text = `RESTORING POWER ${percent}%`;
         }
     } else if (elevatorDoor.isPlayerNearby(camera.position)) {
-        text = 'PRESS [E] — CALL ELEVATOR'
+        text = 'PRESS [E] — CALL ELEVATOR';
     }
 
-    interactionHint.textContent = text
-    interactionHint.classList.toggle('is-visible', text !== '')
+    interactionHint.textContent = text;
+    interactionHint.classList.toggle('is-visible', text !== '');
 }
 
 function handleInteraction() {
-    const startedBox = activeJunctionBox?.beginActivation(
-        camera.position,
-    )
+    const startedBox = activeJunctionBox?.beginActivation(camera.position);
 
-    if (startedBox) return
+    if (startedBox) return;
 
-    const elevatorMessage = elevatorDoor.call(camera.position)
+    const elevatorMessage = elevatorDoor.call(camera.position);
 
-    if (!elevatorMessage) return
+    if (!elevatorMessage) return;
 
     // The first failed elevator call begins the game objective.
     if (!elevatorDoor.isPowered && junctionBoxes.length === 0) {
-        const spawned = spawnNextJunctionBox()
+        const spawned = spawnNextJunctionBox();
 
         showSystemMessage(
             spawned
                 ? 'POWER FAILURE — JUNCTION BOX SIGNAL DETECTED'
                 : 'POWER FAILURE — SIGNAL NOT FOUND',
-        )
+        );
 
-        return
+        return;
     }
 
-    showSystemMessage(elevatorMessage)
+    showSystemMessage(elevatorMessage);
 }
 
 window.addEventListener('keydown', (event) => {
@@ -244,11 +244,12 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.code === 'KeyE') {
-        handleInteraction()
+        handleInteraction();
     }
 
     if (event.code === 'KeyM') {
-        stalker.spawn(hotel, camera.position)
+        hotel.setCorridorLights(false);
+        stalker.spawn(hotel, camera.position);
     }
 });
 
@@ -328,9 +329,7 @@ function tick() {
             senseTarget = elevatorDoor;
             activeJunctionBox = null;
 
-            showSystemMessage(
-                'LIFT ACTIVATED — RETURN TO THE ELEVATOR',
-            )
+            showSystemMessage('LIFT ACTIVATED — RETURN TO THE ELEVATOR');
         }, 900);
     }
 

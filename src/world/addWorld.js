@@ -17,7 +17,6 @@ export const addWorld = async (scene, camera) => {
     const junctionBox = new JunctionBox();
 
     hotel.openStartEntrance('south');
-
     const startingRoom = createStartingRoom({
         scene,
         entrancePosition: hotel.getStartNode().position,
