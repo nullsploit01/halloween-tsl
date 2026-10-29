@@ -12,7 +12,6 @@ export class Stalker {
         this.attackDistance = options.attackDistance ?? 1.2;
 
         this.model = null;
-        this.marker = null;
         this.hasSpawned = false;
         this.isChasing = false;
         this.wasChasing = false;
@@ -80,20 +79,6 @@ export class Stalker {
 
         this.scene.add(this.model);
 
-        this.marker = new THREE.Mesh(
-            new THREE.PlaneGeometry(2, 2),
-            new THREE.MeshBasicMaterial({
-                color: 0x00ff88,
-                transparent: true,
-                opacity: 0.35,
-                side: THREE.DoubleSide,
-            }),
-        );
-
-        this.marker.rotation.x = -Math.PI * 0.5;
-        this.marker.visible = false;
-
-        this.scene.add(this.marker);
     }
 
     playAnimation(name, fadeDuration = 0.25) {
@@ -125,15 +110,11 @@ export class Stalker {
         this.model.position.copy(spawnNode.position);
         this.model.position.y = 0;
 
-        this.marker.position.copy(this.model.position);
-        this.marker.position.y = 0.02;
-
         this.currentNode = spawnNode;
         this.targetNode = null;
         this.previousNode = null;
 
         this.model.visible = true;
-        this.marker.visible = true;
         this.hasSpawned = true;
     }
 
@@ -153,9 +134,6 @@ export class Stalker {
         if (distance <= this.attackDistance) {
             this.targetNode = null;
             this.playAnimation('Attack');
-
-            this.marker.position.copy(this.model.position);
-            this.marker.position.y = 0.02;
 
             this.wasChasing = true;
             return;
@@ -211,9 +189,6 @@ export class Stalker {
             this.moveToTarget(this.patrolSpeed, deltaTime);
         }
 
-        this.marker.position.copy(this.model.position);
-        this.marker.position.y = 0.02;
-
         this.wasChasing = this.isChasing;
     }
 
@@ -221,7 +196,6 @@ export class Stalker {
         if (!this.model) return;
 
         this.model.visible = false;
-        this.marker.visible = false;
         this.isChasing = false;
         this.wasChasing = false;
         this.hasSpawned = false;
