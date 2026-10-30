@@ -661,4 +661,60 @@ export class Hotel {
             }
         }
     }
+
+    triggerRandomLightFlickering(deltaTime) {
+        for (const corridor of this.corridors.values()) {
+            for (const fixture of corridor.userData.lights ?? []) {
+                fixture.update(deltaTime);
+            }
+        }
+
+        for (const node of this.nodes.values()) {
+            for (const fixture of node.group.userData.lights ?? []) {
+                fixture.update(deltaTime);
+            }
+        }
+    }
+
+    triggerCorridorLightGlitch() {
+        for (const corridor of this.corridors.values()) {
+            const lights = corridor.userData.lights ?? [];
+
+            if (Math.random() < 0.9) {
+                for (const fixture of lights) {
+                    fixture.triggerFlicker?.('glitch');
+                }
+            }
+        }
+    }
+
+    triggerGlobalLightGlitch() {
+        const fixtures = [];
+
+        // Collect corridor lights
+        for (const corridor of this.corridors.values()) {
+            const lights = corridor.group.userData.lights ?? [];
+            fixtures.push(...lights);
+        }
+
+        // Collect junction lights
+        for (const node of this.nodes.values()) {
+            const lights = node.group.userData.lights ?? [];
+            fixtures.push(...lights);
+        }
+
+        // Select 60-80% of all fixtures
+        const shuffled = [...fixtures].sort(() => Math.random() - 0.5);
+
+        const flickerCount = Math.ceil(
+            fixtures.length * (0.6 + Math.random() * 0.2)
+        );
+
+        shuffled.slice(0, flickerCount).forEach((fixture, index) => {
+            // Small delay variation makes the event feel less artificial
+            setTimeout(() => {
+                fixture.triggerFlicker('glitch');
+            }, Math.random() * 500);
+        });
+    }
 }

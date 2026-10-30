@@ -9,7 +9,7 @@ export const addWorld = async (scene, camera) => {
     const wallCollisions = new WallCollisions();
 
     const hotel = new Hotel(scene, {
-        hallwayWidth: 7,
+        hallwayWidth: 4,
         hallwayHeight: 4.5,
         hallwayLength: 28,
         wallCollisions,

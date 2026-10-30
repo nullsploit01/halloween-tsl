@@ -302,6 +302,7 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.code === 'KeyE') {
+        hotel.triggerCorridorLightGlitch()
         handleInteraction();
     }
 
@@ -365,10 +366,14 @@ function tick() {
     }
 
     cameraHud.update(deltaTime);
+
     hotel.update(camera.position);
+    hotel.triggerRandomLightFlickering(deltaTime);
+
     if (!elevatorDoor.hasSpawned) {
         elevatorDoor.spawn(hotel, camera.position, 100);
     }
+
     cameraHud.updateObjective(camera, senseTarget, senseModeActive);
 
     const wasActivated = activeJunctionBox?.update(camera.position, deltaTime);
