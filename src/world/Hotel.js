@@ -717,4 +717,11 @@ export class Hotel {
             }, Math.random() * 500);
         });
     }
+
+    getPlayerStartPosition(eyeHeight = 1.7) {
+        const position = this.startNode.position.clone();
+        position.y = eyeHeight;
+
+        return position;
+    }
 }

@@ -8,6 +8,10 @@ export class Stalker {
         this.scene = scene;
         this.agroDistance = options.agroDistance ?? 10;
         this.chaseSpeed = options.chaseSpeed ?? 3;
+        this.hasAttacked = false;
+        this.isAttacking = false;
+        this.attackTimer = 0;
+        this.attackDuration = 1.2;
 
         this.attackDistance = options.attackDistance ?? 1.2;
 
@@ -77,6 +81,8 @@ export class Stalker {
             this.actions[clip.name] = this.mixer.clipAction(clip);
         }
 
+        this.attackDuration = this.actions['Attack']?.getClip().duration ?? 1.2;
+
         this.playAnimation('Walk_calm');
 
         this.scene.add(this.model);
@@ -122,9 +128,34 @@ export class Stalker {
     }
 
     update(playerPosition, deltaTime, hotel) {
-        if (!this.model || !this.hasSpawned) return;
+        if (!this.model || !this.hasSpawned) return false;
 
         this.mixer.update(deltaTime);
+
+        if (this.isAttacking) {
+            this.attackTimer += deltaTime;
+
+            if (this.attackTimer >= this.attackDuration) {
+                this.isAttacking = false;
+
+                const currentDistance = new THREE.Vector2(
+                    playerPosition.x - this.model.position.x,
+                    playerPosition.z - this.model.position.z
+                ).length();
+
+                if (currentDistance <= this.attackDistance) {
+                    this.hasAttacked = true;
+                    return true;
+                }
+
+                this.hasAttacked = false;
+                this.wasChasing = false;
+
+                return false;
+            }
+
+            return false;
+        }
 
         const playerOffset = new THREE.Vector3().subVectors(playerPosition, this.model.position);
 
@@ -136,10 +167,16 @@ export class Stalker {
         // Stop before walking through the player.
         if (distance <= this.attackDistance) {
             this.targetNode = null;
-            this.playAnimation('Attack');
-
             this.wasChasing = true;
-            return;
+
+            if (!this.isAttacking && !this.hasAttacked) {
+                this.isAttacking = true;
+                this.attackTimer = 0;
+
+                this.playAnimation('Attack');
+            }
+
+            return false;
         }
 
         if (this.isChasing) {
@@ -211,6 +248,8 @@ export class Stalker {
         }
 
         this.wasChasing = this.isChasing;
+
+        return false;
     }
 
     despawn() {
@@ -224,6 +263,9 @@ export class Stalker {
         this.currentNode = null;
         this.targetNode = null;
         this.previousNode = null;
+        this.hasAttacked = false;
+        this.isAttacking = false;
+        this.attackTimer = 0;
     }
 
     choosePatrolTarget() {

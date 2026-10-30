@@ -86,10 +86,8 @@ async function setNightVision(enabled) {
     if (nightVisionEnabled === enabled) return;
 
     nightVisionTransitioning = true;
-
+    setLanternVisible(false);
     if (enabled) {
-        // Hide lantern first.
-        setLanternVisible(false);
 
         // Raise the camera into view.
         const completed = await nightVisionCamera.show({
@@ -117,11 +115,6 @@ async function setNightVision(enabled) {
         });
 
         nightVisionEnabled = false;
-
-        // Restore lantern if corridor power is off.
-        if (!hotel.corridorLightsEnabled) {
-            setLanternVisible(true);
-        }
     }
 
     nightVisionTransitioning = false;
@@ -264,6 +257,31 @@ function handleInteraction() {
     showSystemMessage(elevatorMessage);
 }
 
+function respawnPlayer() {
+    // Move player to the starting junction
+    camera.position.copy(hotel.getPlayerStartPosition());
+
+    // Reset camera orientation
+    camera.rotation.set(0, 0, 0);
+
+    // Reset stalker
+    stalker.despawn();
+
+    // Reset gameplay effects
+    postProcessing.setSobel(false);
+    postProcessing.setNightVision(false);
+    postProcessing.setChromaticAberration(false);
+
+    // Restore corridor lighting
+    hotel.setCorridorLights(true);
+    setLanternVisible(false);
+    setNightVision(false);
+
+    showSystemMessage(
+        'SESSION RESTARTED — GOOD LUCK'
+    );
+}
+
 window.addEventListener('keydown', (event) => {
     if (event.repeat) return;
 
@@ -397,7 +415,15 @@ function tick() {
 
     updateInteractionHint();
 
-    stalker.update(camera.position, deltaTime, hotel);
+    const playerWasCaught = stalker.update(
+        camera.position,
+        deltaTime,
+        hotel
+    );
+
+    if (playerWasCaught) {
+        respawnPlayer();
+    }
 
     postProcessing.update(deltaTime);
     postProcessing.renderPipeline.render();
