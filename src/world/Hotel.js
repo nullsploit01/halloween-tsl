@@ -352,6 +352,21 @@ export class Hotel {
         node.group.add(floor);
 
         this.addCeiling(node.group, this.hallwayWidth, this.hallwayWidth);
+
+        const fixture = createFluorescentLight({
+            hallwayHeight: this.hallwayHeight,
+            intensity: 12,
+            distance: 12,
+            color: 0xd6c5a1
+        });
+
+        fixture.group.position.set(0, 0, 0);
+        fixture.setEnabled(this.corridorLightsEnabled);
+
+        node.group.add(fixture.group);
+
+        // Keep a reference for enabling/disabling later.
+        node.group.userData.lights = [fixture];
     }
 
     addJunctionWall(node, direction) {
@@ -440,6 +455,7 @@ export class Hotel {
                 hallwayHeight: this.hallwayHeight,
                 intensity: 12,
                 distance: 9,
+                color: 0xe8d9b5
             });
 
             if (isVertical) {
@@ -633,6 +649,15 @@ export class Hotel {
         for (const corridor of corridors) {
             for (const fixture of corridor.userData.lights ?? []) {
                 fixture.setEnabled(enabled);
+            }
+        }
+
+        // Toggle junction lights when changing all lights.
+        if (!corridorKey) {
+            for (const node of this.nodes.values()) {
+                for (const fixture of node.group.userData.lights ?? []) {
+                    fixture.setEnabled(enabled);
+                }
             }
         }
     }

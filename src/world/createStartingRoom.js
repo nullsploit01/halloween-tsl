@@ -36,10 +36,9 @@ export function createStartingRoom({
         floorMaterial,
     );
 
-    floor.position.y = -floorThickness * 0.5;
+    floor.position.y = -floorThickness * 0.51;
     floor.receiveShadow = true;
     group.add(floor);
-
     const ceiling = new THREE.Mesh(
         new THREE.BoxGeometry(hallwayWidth, ceilingThickness, roomDepth),
         ceilingMaterial,
