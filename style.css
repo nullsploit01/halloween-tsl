@@ -181,29 +181,72 @@ canvas.threejs.sense-blur {
 
 .system-message {
     position: fixed;
-    bottom: 12%;
+    top: 8%;
     left: 50%;
-    z-index: 40;
-    max-width: 420px;
-    padding: 10px 16px;
-    border: 1px solid rgba(255, 80, 65, 0.45);
-    color: #ffd6cf;
-    background: rgba(12, 5, 5, 0.82);
+    transform: translate(-50%, -15px);
+
+    padding: 12px 24px;
+    min-width: 280px;
+    max-width: 80vw;
+
+    background: rgba(8, 12, 14, 0.92);
+    border: 1px solid rgba(150, 170, 180, 0.35);
+    border-left: 3px solid #8ba3b5;
+
+    color: #dce5e9;
     font-family: monospace;
-    font-size: 12px;
-    letter-spacing: 0.12em;
+    font-size: 13px;
+    letter-spacing: 2px;
     text-align: center;
-    pointer-events: none;
+    text-transform: uppercase;
+
     opacity: 0;
-    transform: translate(-50%, 8px);
+    visibility: hidden;
+    pointer-events: none;
+
     transition:
-        opacity 0.18s ease,
-        transform 0.18s ease;
+        opacity 0.25s ease,
+        transform 0.25s ease,
+        visibility 0.25s;
+    z-index: 10000;
 }
 
 .system-message.is-visible {
     opacity: 1;
+    visibility: visible;
     transform: translate(-50%, 0);
+}
+
+/* SUCCESS - Green */
+.system-message.success {
+    color: #a5e6b5;
+    border-color: rgba(75, 220, 120, 0.45);
+    border-left-color: #48d878;
+    box-shadow: 0 0 18px rgba(40, 180, 90, 0.08);
+}
+
+/* INFO - Blue */
+.system-message.info {
+    color: #a8d8f0;
+    border-color: rgba(80, 170, 230, 0.4);
+    border-left-color: #55b9ed;
+    box-shadow: 0 0 18px rgba(50, 150, 220, 0.08);
+}
+
+/* WARNING - Amber */
+.system-message.warning {
+    color: #f0c77e;
+    border-color: rgba(230, 165, 50, 0.45);
+    border-left-color: #e9a83e;
+    box-shadow: 0 0 18px rgba(220, 150, 30, 0.08);
+}
+
+/* ERROR - Red */
+.system-message.error {
+    color: #f08c8c;
+    border-color: rgba(230, 65, 65, 0.5);
+    border-left-color: #e94b4b;
+    box-shadow: 0 0 18px rgba(220, 40, 40, 0.12);
 }
 
 .interaction-hint {

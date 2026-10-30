@@ -167,22 +167,45 @@ function spawnNextJunctionBox() {
     return true;
 }
 
+
 const systemMessage = document.createElement('div');
 systemMessage.className = 'system-message';
 document.body.append(systemMessage);
 
 let systemMessageTimeout;
 
-function showSystemMessage(message) {
+function showSystemMessage(message, type = 'info', duration = 2500) {
+    const validTypes = ['success', 'info', 'warning', 'error'];
+
+    if (!validTypes.includes(type)) {
+        type = 'info';
+    }
+
     systemMessage.textContent = message;
-    systemMessage.classList.add('is-visible');
+
+    systemMessage.classList.remove(
+        'is-visible',
+        'success',
+        'info',
+        'warning',
+        'error'
+    );
+
+    // Apply new type
+    systemMessage.classList.add(type);
+
+    // Restart visibility animation
+    requestAnimationFrame(() => {
+        systemMessage.classList.add('is-visible');
+    });
 
     clearTimeout(systemMessageTimeout);
 
     systemMessageTimeout = setTimeout(() => {
         systemMessage.classList.remove('is-visible');
-    }, 2500);
+    }, duration);
 }
+
 
 
 function triggerPowerOutage() {
@@ -198,7 +221,8 @@ function triggerPowerOutage() {
     stalker.spawn(hotel, camera.position);
 
     showSystemMessage(
-        'POWER FAILURE — A STALKER IS LOOKING FOR YOU'
+        'POWER FAILURE — A STALKER IS LOOKING FOR YOU',
+        'error'
     );
 }
 
@@ -244,17 +268,10 @@ function handleInteraction() {
         }, 2000);
         
         const spawned = spawnNextJunctionBox();
-
-        showSystemMessage(
-            spawned
-                ? 'POWER FAILURE — JUNCTION BOX SIGNAL DETECTED'
-                : 'POWER FAILURE — SIGNAL NOT FOUND',
-        );
-
         return;
     }
 
-    showSystemMessage(elevatorMessage);
+    showSystemMessage(elevatorMessage, 'info');
 }
 
 function respawnPlayer() {
@@ -278,7 +295,8 @@ function respawnPlayer() {
     setNightVision(false);
 
     showSystemMessage(
-        'SESSION RESTARTED — GOOD LUCK'
+        'SESSION RESTARTED — GOOD LUCK', 
+        'success'
     );
 }
 
@@ -409,7 +427,7 @@ function tick() {
             senseTarget = elevatorDoor;
             activeJunctionBox = null;
 
-            showSystemMessage('LIFT ACTIVATED — RETURN TO THE ELEVATOR');
+            showSystemMessage('LIFT ACTIVATED — RETURN TO THE ELEVATOR', 'success');
         }, 900);
     }
 
