@@ -77,6 +77,7 @@ const normalAmbientIntensity = ambientLight.intensity;
 let ambientStartTimeout;
 let ambientResetTimeout;
 let senseModeActive = false;
+let powerOutageTriggered = false;
 
 function setNightVision(enabled) {
     nightVisionEnabled = enabled;
@@ -153,6 +154,25 @@ function showSystemMessage(message) {
     }, 2500);
 }
 
+
+function triggerPowerOutage() {
+    if (powerOutageTriggered) return;
+
+    powerOutageTriggered = true;
+
+    hotel.setCorridorLights(false);
+
+    stopSobelEvent();
+    setNightVision(false);
+
+    stalker.spawn(hotel, camera.position);
+
+    showSystemMessage(
+        'POWER FAILURE — A STALKER IS LOOKING FOR YOU'
+    );
+}
+
+
 const interactionHint = document.createElement('div');
 interactionHint.className = 'interaction-hint';
 document.body.append(interactionHint);
@@ -189,6 +209,10 @@ function handleInteraction() {
 
     // The first failed elevator call begins the game objective.
     if (!elevatorDoor.isPowered && junctionBoxes.length === 0) {
+        setTimeout(() => {
+            triggerPowerOutage();
+        }, 2000);
+        
         const spawned = spawnNextJunctionBox();
 
         showSystemMessage(
@@ -206,7 +230,7 @@ function handleInteraction() {
 window.addEventListener('keydown', (event) => {
     if (event.repeat) return;
 
-    if (event.code === 'KeyF') {
+    if (event.code === 'KeyN') {
         const nextNightVisionState = !nightVisionEnabled;
 
         // Enabling night vision cancels the Sobel event.
@@ -239,17 +263,12 @@ window.addEventListener('keydown', (event) => {
         }, 4000);
     }
 
-    if (event.code === 'KeyK') {
-        stalker.despawn();
-    }
-
     if (event.code === 'KeyE') {
         handleInteraction();
     }
 
-    if (event.code === 'KeyM') {
-        hotel.setCorridorLights(false);
-        stalker.spawn(hotel, camera.position);
+    if (event.code === 'KeyL') {
+        setLanternVisible(!lantern.visible);
     }
 });
 

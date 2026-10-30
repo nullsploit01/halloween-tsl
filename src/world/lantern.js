@@ -19,10 +19,10 @@ export async function addLantern(camera) {
     // Attach to the camera for FPS positioning.
     camera.add(lantern);
 
-    const lanternLight = new THREE.PointLight(0xff9a45, 3.5, 10, 2);
+    const lanternLight = new THREE.PointLight(0xff9a45, 1.5, 4.5, 2);
 
+    lanternLight.castShadow = false;
     lanternLight.position.set(10, 10.35, -30);
-    lanternLight.castShadow = true;
     lanternLight.shadow.mapSize.set(512, 512);
 
     lantern.add(lanternLight);
