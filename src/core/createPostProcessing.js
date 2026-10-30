@@ -1,8 +1,19 @@
+
+import * as THREE from 'three/webgpu';
+
+import {
+    grayscale,
+    mix,
+    pass,
+    renderOutput,
+    uniform,
+    vec3
+} from 'three/tsl';
+
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { film } from 'three/addons/tsl/display/FilmNode.js';
 import { sobel } from 'three/addons/tsl/display/SobelOperatorNode.js';
-import { grayscale, mix, pass, uniform, vec3 } from 'three/tsl';
-import * as THREE from 'three/webgpu';
+import { chromaticAberration } from 'three/addons/tsl/display/ChromaticAberrationNode.js';
 
 export function createPostProcessing({ renderer, scene, camera }) {
     const renderPipeline = new THREE.RenderPipeline(renderer);
@@ -10,20 +21,22 @@ export function createPostProcessing({ renderer, scene, camera }) {
     const scenePass = pass(scene, camera);
     const sceneColor = scenePass.getTextureNode('output');
 
+    // BLOOM
     const bloomPass = bloom(sceneColor);
     bloomPass.threshold.value = 0;
     bloomPass.strength.value = 0.08;
 
     const normalView = sceneColor.add(bloomPass);
 
+    // SOBEL
     const sobelAmount = uniform(0);
     let sobelTarget = 0;
     let sobelReleaseAt = 0;
 
     const sobelView = sobel(sceneColor);
-
     const normalToSobel = mix(normalView, sobelView, sobelAmount);
 
+    // NIGHT VISION
     const nightVisionEnabled = uniform(0);
     const grainIntensity = uniform(0);
 
@@ -33,7 +46,28 @@ export function createPostProcessing({ renderer, scene, camera }) {
 
     const nightVisionView = film(nightVisionColor, grainIntensity);
 
-    renderPipeline.outputNode = mix(normalToSobel, nightVisionView, nightVisionEnabled);
+    // Combine normal, Sobel and night vision
+    const combinedView = mix(
+        normalToSobel,
+        nightVisionView,
+        nightVisionEnabled
+    );
+
+    // CHROMATIC ABERRATION
+    const caStrength = uniform(0.35);
+    const caCenter = uniform(new THREE.Vector2(0.5, 0.5));
+    const caScale = uniform(1.2);
+
+    const outputPass = renderOutput(combinedView);
+
+    const chromaticAberrationPass = chromaticAberration(
+        outputPass,
+        caStrength,
+        caCenter,
+        caScale
+    );
+
+    renderPipeline.outputNode = chromaticAberrationPass;
 
     return {
         renderPipeline,
@@ -50,7 +84,17 @@ export function createPostProcessing({ renderer, scene, camera }) {
 
         setNightVision(enabled) {
             nightVisionEnabled.value = enabled ? 1 : 0;
-            grainIntensity.value = enabled ? 0.22 : 0;
+            grainIntensity.value = enabled ? 4.92 : 0;
+        },
+
+        // Enable or disable chromatic aberration
+        setChromaticAberration(enabled) {
+            caStrength.value = enabled ? 0.35 : 0;
+        },
+
+        // Change effect intensity dynamically
+        setChromaticAberrationStrength(strength) {
+            caStrength.value = THREE.MathUtils.clamp(strength, 0, 3);
         },
 
         update(deltaTime) {
@@ -64,7 +108,8 @@ export function createPostProcessing({ renderer, scene, camera }) {
             const transitionSpeed = 7;
 
             sobelAmount.value +=
-                (sobelTarget - sobelAmount.value) * (1 - Math.exp(-transitionSpeed * deltaTime));
-        },
+                (sobelTarget - sobelAmount.value) *
+                (1 - Math.exp(-transitionSpeed * deltaTime));
+        }
     };
 }
