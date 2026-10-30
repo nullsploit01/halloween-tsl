@@ -405,6 +405,7 @@ function tick() {
 
     hotel.update(camera.position);
     hotel.triggerRandomLightFlickering(deltaTime);
+    hotel.updateWallWritings(timer.getElapsed());
 
     if (!elevatorDoor.hasSpawned) {
         elevatorDoor.spawn(hotel, camera.position, 100);

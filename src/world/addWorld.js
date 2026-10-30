@@ -7,7 +7,11 @@ import { addNightVisionCamera } from './nightVisionCamera.js';
 
 export const addWorld = async (scene, camera) => {
     const wallCollisions = new WallCollisions();
-
+    await Promise.all([
+        document.fonts.load('190px "Special Elite"'),
+        document.fonts.load('190px "Caveat"'),
+        document.fonts.load('190px "Permanent Marker"'),
+    ]);
     const hotel = new Hotel(scene, {
         hallwayWidth: 4,
         hallwayHeight: 4.5,

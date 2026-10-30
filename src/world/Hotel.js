@@ -2,6 +2,10 @@ import { createHotelDoor } from './createHotelDoor';
 import { createFluorescentLight } from './createLighting';
 import { createTiledFloorGeometry } from './createTiledFloorGeometry';
 import * as THREE from 'three/webgpu';
+import {
+    createWallWriting,
+    updateWallWriting
+} from './createWallWriting';
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -128,6 +132,7 @@ function createBoxWall({
 export class Hotel {
     constructor(scene, options = {}) {
         this.scene = scene;
+        this.wallWritings = [];
 
         this.corridorLightsEnabled = true;
         this.ceilingThickness = 0.15;
@@ -389,6 +394,13 @@ export class Hotel {
 
         wall.position.y = this.hallwayHeight * 0.5;
 
+        this.addRandomWallWriting(wall, {
+            axis: isNorthOrSouth ? 'x' : 'z',
+            side: (direction === 'north' || direction === 'west') ? -1 : 1,
+            length: this.hallwayWidth,
+            probability: 0.18,
+        });
+
         node.group.add(wall);
 
         this.registerWall(wall, isNorthOrSouth ? 'x' : 'z', this.hallwayWidth);
@@ -501,6 +513,15 @@ export class Hotel {
             } else {
                 wall.position.z = side * this.hallwayWidth * 0.5;
             }
+
+            this.addRandomWallWriting(wall, {
+                axis: isVertical ? 'z' : 'x',
+                side,
+                length: corridorLength,
+                doorOffset,
+                doorWidth,
+                probability: 0.32,
+            });
 
             group.add(wall);
 
@@ -723,5 +744,82 @@ export class Hotel {
         position.y = eyeHeight;
 
         return position;
+    }
+
+    addRandomWallWriting(wall, {
+        axis,
+        side,
+        length,
+        doorOffset = null,
+        doorWidth = 2,
+        probability = 0.3,
+    } = {}) {
+        if (Math.random() > probability) return;
+
+        const writingWidth = THREE.MathUtils.randFloat(1.8, 3.2);
+        const writingHeight = THREE.MathUtils.randFloat(1.4, 1.7);
+
+        const margin = writingWidth / 2 + 0.5;
+        const maxOffset = length / 2 - margin;
+
+        if (maxOffset <= 0) return;
+
+        let offset = null;
+
+        for (let i = 0; i < 15; i++) {
+            const candidate = THREE.MathUtils.randFloat(-maxOffset, maxOffset);
+
+            const overlapsDoor =
+                doorOffset !== null &&
+                Math.abs(candidate - doorOffset) <
+                    doorWidth / 2 + writingWidth / 2 + 0.4;
+
+            if (!overlapsDoor) {
+                offset = candidate;
+                break;
+            }
+        }
+
+        if (offset === null) return;
+
+        const isRed = Math.random() < 0.8;
+
+        const writing = createWallWriting({
+            width: writingWidth,
+            height: writingHeight,
+            color: isRed ? '#873b35' : '#c2b9a6',
+        });
+
+        // Position above the dado rail
+        const y = THREE.MathUtils.randFloat(0.55, 0.85);
+
+        if (axis === 'x') {
+            writing.position.set(
+                offset,
+                y,
+                side === -1 ? 0.115 : -0.115
+            );
+
+            writing.rotation.y = side === -1 ? 0 : Math.PI;
+        } else {
+            writing.position.set(
+                side === -1 ? 0.115 : -0.115,
+                y,
+                offset
+            );
+
+            writing.rotation.y = side === -1
+                ? Math.PI / 2
+                : -Math.PI / 2;
+        }
+
+        wall.add(writing);
+        this.wallWritings.push(writing);
+    }
+
+    updateWallWritings(elapsedTime) {
+        for (const writing of this.wallWritings) {
+            updateWallWriting(writing, elapsedTime);
+        }
     }
 }
