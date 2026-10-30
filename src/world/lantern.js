@@ -16,20 +16,18 @@ export async function addLantern(camera) {
         }
     });
 
-    // Attach to the camera for FPS positioning.
     camera.add(lantern);
 
-    const lanternLight = new THREE.PointLight(0xff9a45, 1.5, 4.5, 2);
+    const lanternLight = new THREE.PointLight(0xff9a45, 3.5, 10, 2);
 
-    lanternLight.castShadow = false;
     lanternLight.position.set(10, 10.35, -30);
+    lanternLight.castShadow = false;
     lanternLight.shadow.mapSize.set(512, 512);
 
     lantern.add(lanternLight);
 
     const restingPosition = new THREE.Vector3(0.32, -0.55, -0.95);
 
-    // Start below the player's view.
     const hiddenPosition = restingPosition.clone();
     hiddenPosition.y -= 0.8;
 
@@ -71,12 +69,10 @@ export async function addLantern(camera) {
 
             const t = THREE.MathUtils.clamp((now - startTime) / duration, 0, 1);
 
-            // Smooth ease-out.
             const eased = 1 - Math.pow(1 - t, 3);
 
             lantern.position.lerpVectors(hiddenPosition, restingPosition, eased);
 
-            // Small final settling motion.
             const settle = Math.sin(t * Math.PI) * 0.025;
             lantern.position.y += settle;
 

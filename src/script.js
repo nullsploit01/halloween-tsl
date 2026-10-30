@@ -37,7 +37,7 @@ const postProcessing = createPostProcessing({
 
 const { ambientLight } = addLighting({ scene, renderer });
 
-const { lantern, hotel, lanternLight, setLanternVisible } = await addWorld(scene, camera);
+const { lantern, hotel, lanternLight, setLanternVisible, nightVisionCamera } = await addWorld(scene, camera);
 
 let activatedBoxCount = 0;
 const elevatorDoor = new ElevatorDoor(scene);
@@ -79,15 +79,52 @@ let ambientResetTimeout;
 let senseModeActive = false;
 let powerOutageTriggered = false;
 
-function setNightVision(enabled) {
-    nightVisionEnabled = enabled;
+let nightVisionTransitioning = false;
 
-    postProcessing.setNightVision(enabled);
-    nightVisionLight.visible = enabled;
+async function setNightVision(enabled) {
+    if (nightVisionTransitioning) return;
+    if (nightVisionEnabled === enabled) return;
 
-    lantern.visible = !enabled && !hotel.corridorLightsEnabled;
-    lanternLight.visible = !enabled && !hotel.corridorLightsEnabled;
-    cameraHud.setVisible(enabled);
+    nightVisionTransitioning = true;
+
+    if (enabled) {
+        // Hide lantern first.
+        setLanternVisible(false);
+
+        // Raise the camera into view.
+        const completed = await nightVisionCamera.show({
+            duration: 650,
+        });
+
+        if (!completed) {
+            nightVisionTransitioning = false;
+            return;
+        }
+
+        // Activate night vision after the camera is raised.
+        postProcessing.setNightVision(true);
+        nightVisionLight.visible = true;
+        cameraHud.setVisible(true);
+
+        nightVisionEnabled = true;
+    } else {
+        postProcessing.setNightVision(false);
+        nightVisionLight.visible = false;
+        cameraHud.setVisible(false);
+
+        await nightVisionCamera.hide({
+            duration: 1050,
+        });
+
+        nightVisionEnabled = false;
+
+        // Restore lantern if corridor power is off.
+        if (!hotel.corridorLightsEnabled) {
+            setLanternVisible(true);
+        }
+    }
+
+    nightVisionTransitioning = false;
 }
 
 function stopSobelEvent() {
@@ -231,9 +268,10 @@ window.addEventListener('keydown', (event) => {
     if (event.repeat) return;
 
     if (event.code === 'KeyN') {
+        if (nightVisionTransitioning) return;
+
         const nextNightVisionState = !nightVisionEnabled;
 
-        // Enabling night vision cancels the Sobel event.
         if (nextNightVisionState) {
             stopSobelEvent();
         }
