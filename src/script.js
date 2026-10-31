@@ -6,6 +6,7 @@ import { addLighting } from './core/lighting.js';
 import { Sizes } from './core/Sizes.js';
 import { createCameraHud } from './ui/createCameraHud.js';
 import { LoadingScreen } from './ui/LoadingScreen.js';
+import { soundManager } from './world/addSounds.js';
 import { addWorld } from './world/addWorld.js';
 import { ElevatorDoor } from './world/ElevatorDoor.js';
 import { JunctionBox } from './world/JunctionBox.js';
@@ -13,7 +14,6 @@ import { Stalker } from './world/Stalker.js';
 import { Howler } from 'howler';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { ClusteredLighting } from 'three/examples/jsm/lighting/ClusteredLighting.js';
-import {soundManager} from './world/addSounds.js';
 import * as THREE from 'three/webgpu';
 
 const canvas = document.querySelector('canvas.threejs');
@@ -70,15 +70,15 @@ loadingScreen.ready();
 loadingScreen.onEnter(async () => {
     await Howler.ctx?.resume();
 
-    soundManager.playSound('woosh')
+    soundManager.playSound('woosh');
 
     setTimeout(() => {
         loadingScreen.hide();
     }, 400);
 
     setTimeout(() => {
-        soundManager.playSound('ventilation')
-        soundManager.playSound('lightBuzz')
+        soundManager.playSound('ventilation');
+        soundManager.playSound('lightBuzz');
     }, 700);
 
     controls.lock();
@@ -241,12 +241,12 @@ function triggerPowerOutage() {
     stalker.spawn(hotel, camera.position);
 
     setTimeout(() => {
-        soundManager.stopSound('ventilation')
-        soundManager.stopSound('lightBuzz')
+        soundManager.stopSound('ventilation');
+        soundManager.stopSound('lightBuzz');
     }, 100);
 
     setTimeout(() => {
-        soundManager.playSound('creepy')
+        soundManager.playSound('creepy');
     }, 300);
 
     showSystemMessage('POWER FAILURE — A STALKER IS LOOKING FOR YOU', 'error');
@@ -385,6 +385,9 @@ const walkSpeed = 4;
 const sprintSpeed = 7;
 const sneakSpeed = 1.5;
 
+let currentFootstepSound = null;
+let currentFootstepId = null;
+
 function tick() {
     timer.update();
 
@@ -410,21 +413,42 @@ function tick() {
 
         if (movement.lengthSq() > 0) {
             const isShiftHeld = keys.has('ShiftLeft') || keys.has('ShiftRight');
+            const isAltHeld = keys.has('AltLeft') || keys.has('AltRight');
 
-            const isCtrlHeld = keys.has('AltLeft') || keys.has('AltRight');
-
-            // Ctrl + Shift takes priority over sprint.
             let currentMoveSpeed = walkSpeed;
+            let footstepSound = 'walking';
 
-            if (isShiftHeld && isCtrlHeld) {
+            // Alt + Shift = Sneaking
+            if (isAltHeld && isShiftHeld) {
                 currentMoveSpeed = sneakSpeed;
-            } else if (isShiftHeld) {
+                footstepSound = 'slow-walking';
+            }
+            // Shift = Running
+            else if (isShiftHeld) {
                 currentMoveSpeed = sprintSpeed;
+                footstepSound = 'running';
             }
 
             movement.normalize().multiplyScalar(currentMoveSpeed * deltaTime);
 
             hotel.movePlayer(camera.position, movement, 1.25);
+
+            if (currentFootstepSound !== footstepSound) {
+                if (currentFootstepSound && currentFootstepId !== null) {
+                    soundManager.stopSound(currentFootstepSound, currentFootstepId);
+                }
+
+                currentFootstepSound = footstepSound;
+
+                currentFootstepId = soundManager.playSound(footstepSound, { loop: true });
+            }
+        } else {
+            if (currentFootstepSound && currentFootstepId !== null) {
+                soundManager.stopSound(currentFootstepSound, currentFootstepId);
+            }
+
+            currentFootstepSound = null;
+            currentFootstepId = null;
         }
     }
 

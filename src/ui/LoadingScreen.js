@@ -1,19 +1,17 @@
-
-import * as THREE from 'three/webgpu';
-
 import {
-    uv,
-    time,
-    vec2,
     color,
-    mix,
-    smoothstep,
-    sin,
     float,
     length,
-    mx_noise_float,
+    mix,
     mx_fractal_noise_float,
+    mx_noise_float,
+    sin,
+    smoothstep,
+    time,
+    uv,
+    vec2,
 } from 'three/tsl';
+import * as THREE from 'three/webgpu';
 
 export class LoadingScreen {
     constructor(renderer) {
@@ -24,9 +22,7 @@ export class LoadingScreen {
 
         this.scene = new THREE.Scene();
 
-        this.camera = new THREE.OrthographicCamera(
-            -1, 1, 1, -1, 0.1, 10
-        );
+        this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
 
         this.camera.position.z = 1;
 
@@ -35,97 +31,42 @@ export class LoadingScreen {
 
         const screenUV = uv();
 
-        const drift = vec2(
-            time.mul(0.018),
-            time.mul(-0.011)
-        );
+        const drift = vec2(time.mul(0.018), time.mul(-0.011));
 
-        const warp = mx_noise_float(
-            screenUV.mul(2.8).add(drift),
-            1,
-            0
-        );
+        const warp = mx_noise_float(screenUV.mul(2.8).add(drift), 1, 0);
 
         const fogUV = screenUV
             .mul(vec2(3.2, 4.8))
             .add(drift)
-            .add(vec2(
-                warp.mul(0.22),
-                warp.mul(0.12)
-            ));
+            .add(vec2(warp.mul(0.22), warp.mul(0.12)));
 
-        const fogNoise = mx_fractal_noise_float(
-            fogUV,
-            4,
-            2,
-            0.5,
-            1
-        );
+        const fogNoise = mx_fractal_noise_float(fogUV, 4, 2, 0.5, 1);
 
-        const fogMask = smoothstep(
-            -0.35,
-            0.55,
-            fogNoise
-        );
+        const fogMask = smoothstep(-0.35, 0.55, fogNoise);
 
-        const lowerFog = smoothstep(
-            0.0,
-            0.9,
-            float(1).sub(screenUV.y)
-        );
+        const lowerFog = smoothstep(0.0, 0.9, float(1).sub(screenUV.y));
 
-        const fog = fogMask
-            .mul(lowerFog)
-            .mul(0.9);
+        const fog = fogMask.mul(lowerFog).mul(0.9);
 
-        const baseColor = mix(
-            color('#030203'),
-            color('#28070b'),
-            fog
-        );
+        const baseColor = mix(color('#030203'), color('#28070b'), fog);
 
-        const redMist = color('#650d17')
-            .mul(fog.mul(0.22));
+        const redMist = color('#650d17').mul(fog.mul(0.22));
 
-        const grainNoise = mx_noise_float(
-            screenUV.mul(900).add(drift.mul(100)),
-            1,
-            0
-        );
+        const grainNoise = mx_noise_float(screenUV.mul(900).add(drift.mul(100)), 1, 0);
 
         const grain = grainNoise.mul(0.025);
 
-        const scanlines = sin(
-            screenUV.y.mul(1100)
-        )
-            .mul(0.5)
-            .add(0.5);
+        const scanlines = sin(screenUV.y.mul(1100)).mul(0.5).add(0.5);
 
-        const scanlineMask = mix(
-            float(0.94),
-            float(1),
-            scanlines
-        );
+        const scanlineMask = mix(float(0.94), float(1), scanlines);
 
-        const distanceFromCenter = length(
-            screenUV.sub(vec2(0.5, 0.5))
-        );
+        const distanceFromCenter = length(screenUV.sub(vec2(0.5, 0.5)));
 
-        const vignette = smoothstep(
-            0.25,
-            0.85,
-            distanceFromCenter
-        );
+        const vignette = smoothstep(0.25, 0.85, distanceFromCenter);
 
-        const vignetteMask = float(1).sub(
-            vignette.mul(0.82)
-        );
+        const vignetteMask = float(1).sub(vignette.mul(0.82));
 
-        const flicker = sin(
-            time.mul(13)
-        )
-            .mul(0.012)
-            .add(0.988);
+        const flicker = sin(time.mul(13)).mul(0.012).add(0.988);
 
         this.material.colorNode = baseColor
             .add(redMist)
@@ -134,10 +75,7 @@ export class LoadingScreen {
             .mul(vignetteMask)
             .mul(flicker);
 
-        this.background = new THREE.Mesh(
-            new THREE.PlaneGeometry(2, 2),
-            this.material
-        );
+        this.background = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.material);
 
         this.scene.add(this.background);
 
@@ -170,21 +108,13 @@ export class LoadingScreen {
 
         document.body.appendChild(this.element);
 
-        this.status = this.element.querySelector(
-            '.loading-status'
-        );
+        this.status = this.element.querySelector('.loading-status');
 
-        this.progressFill = this.element.querySelector(
-            '.loading-progress-fill'
-        );
+        this.progressFill = this.element.querySelector('.loading-progress-fill');
 
-        this.percent = this.element.querySelector(
-            '.loading-percent'
-        );
+        this.percent = this.element.querySelector('.loading-percent');
 
-        this.enterButton = this.element.querySelector(
-            '.loading-enter'
-        );
+        this.enterButton = this.element.querySelector('.loading-enter');
 
         this.enterButton.addEventListener('click', () => {
             if (!this.isReady || this.hasEntered) return;
@@ -224,11 +154,7 @@ export class LoadingScreen {
     }
 
     setProgress(value, message = 'LOADING...') {
-        const progress = THREE.MathUtils.clamp(
-            value,
-            0,
-            100
-        );
+        const progress = THREE.MathUtils.clamp(value, 0, 100);
 
         this.progressFill.style.width = `${progress}%`;
         this.percent.textContent = `${Math.round(progress)}%`;
@@ -240,10 +166,7 @@ export class LoadingScreen {
 
         this.element.classList.add('is-ready');
 
-        this.setProgress(
-            100,
-            'SOMETHING STIRS IN THE DARK'
-        );
+        this.setProgress(100, 'SOMETHING STIRS IN THE DARK');
 
         this.enterButton.disabled = false;
         this.enterButton.classList.add('is-ready');
@@ -256,20 +179,13 @@ export class LoadingScreen {
     hide() {
         this.element.classList.add('is-hidden');
 
-        this.element.addEventListener(
-            'transitionend',
-            () => this.element.remove(),
-            { once: true }
-        );
+        this.element.addEventListener('transitionend', () => this.element.remove(), { once: true });
     }
 
     dispose() {
         this.stop();
 
-        window.removeEventListener(
-            'resize',
-            this.resizeHandler
-        );
+        window.removeEventListener('resize', this.resizeHandler);
 
         this.background.geometry.dispose();
         this.material.dispose();

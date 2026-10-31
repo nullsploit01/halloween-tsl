@@ -52,6 +52,21 @@ soundManager.registerSound('woosh', '/sounds/general/woosh.mp3', {
     positional: false,
 });
 
+soundManager.registerSound('walking', '/sounds/footsteps/walking.mp3', {
+    volume: 0.2,
+    positional: false,
+});
+
+soundManager.registerSound('running', '/sounds/footsteps/running.mp3', {
+    volume: 0.2,
+    positional: false,
+});
+
+soundManager.registerSound('slow-walking', '/sounds/footsteps/slow-walking.mp3', {
+    volume: 0.2,
+    positional: false,
+});
+
 soundManager.setEnvironmentSources([
     new THREE.Vector3(0, 2, -12),
     new THREE.Vector3(5, 1.5, -20),

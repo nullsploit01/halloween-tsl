@@ -1,4 +1,3 @@
-
 import { Howl, Howler } from 'howler';
 import * as THREE from 'three/webgpu';
 
@@ -95,10 +94,7 @@ export class SoundManager {
             return null;
         }
 
-        if (
-            options.respectCooldown &&
-            this.elapsedTime - sound.lastPlayed < sound.cooldown
-        ) {
+        if (options.respectCooldown && this.elapsedTime - sound.lastPlayed < sound.cooldown) {
             return null;
         }
 
@@ -117,12 +113,7 @@ export class SoundManager {
         sound.howl.loop(options.loop ?? sound.loop, id);
 
         if (options.positional) {
-            sound.howl.pos(
-                options.position.x,
-                options.position.y,
-                options.position.z,
-                id
-            );
+            sound.howl.pos(options.position.x, options.position.y, options.position.z, id);
         }
 
         if (options.stereo !== undefined) {
@@ -151,10 +142,14 @@ export class SoundManager {
 
         sound.lastPlayed = this.elapsedTime;
 
-        sound.howl.once('end', () => {
-            this.activeSounds.delete(activeId);
-            this.activeEnvironmentSounds.delete(activeId);
-        }, id);
+        sound.howl.once(
+            'end',
+            () => {
+                this.activeSounds.delete(activeId);
+                this.activeEnvironmentSounds.delete(activeId);
+            },
+            id,
+        );
 
         if (options.environment) {
             this.activeEnvironmentSounds.add(activeId);
@@ -198,18 +193,15 @@ export class SoundManager {
     // ENVIRONMENTAL RANDOM PLAYBACK
 
     setEnvironmentSources(positions) {
-        this.environmentSources = positions.map(position =>
+        this.environmentSources = positions.map((position) =>
             position.clone
                 ? position.clone()
-                : new THREE.Vector3(position.x, position.y, position.z)
+                : new THREE.Vector3(position.x, position.y, position.z),
         );
     }
 
     randomEnvironmentInterval() {
-        return THREE.MathUtils.randFloat(
-            this.minEnvironmentInterval,
-            this.maxEnvironmentInterval
-        );
+        return THREE.MathUtils.randFloat(this.minEnvironmentInterval, this.maxEnvironmentInterval);
     }
 
     playRandomEnvironmentSound() {
@@ -221,22 +213,18 @@ export class SoundManager {
             return null;
         }
 
-        const available = [...this.sounds.entries()]
-            .filter(([name, sound]) => {
-                return (
-                    sound.positional &&
-                    sound.weight > 0 &&
-                    this.elapsedTime - sound.lastPlayed >= sound.cooldown &&
-                    name !== this.lastEnvironmentSound
-                );
-            });
+        const available = [...this.sounds.entries()].filter(([name, sound]) => {
+            return (
+                sound.positional &&
+                sound.weight > 0 &&
+                this.elapsedTime - sound.lastPlayed >= sound.cooldown &&
+                name !== this.lastEnvironmentSound
+            );
+        });
 
         if (!available.length) return null;
 
-        const totalWeight = available.reduce(
-            (sum, [, sound]) => sum + sound.weight,
-            0
-        );
+        const totalWeight = available.reduce((sum, [, sound]) => sum + sound.weight, 0);
 
         let random = Math.random() * totalWeight;
         let selected = available[available.length - 1];
@@ -252,9 +240,8 @@ export class SoundManager {
 
         const [name] = selected;
 
-        const position = this.environmentSources[
-            THREE.MathUtils.randInt(0, this.environmentSources.length - 1)
-        ];
+        const position =
+            this.environmentSources[THREE.MathUtils.randInt(0, this.environmentSources.length - 1)];
 
         return this.playSound(name, {
             positional: true,
@@ -273,15 +260,9 @@ export class SoundManager {
         camera.getWorldDirection(this.listenerForward);
         camera.getWorldQuaternion(this.listenerQuaternion);
 
-        this.listenerUp
-            .set(0, 1, 0)
-            .applyQuaternion(this.listenerQuaternion);
+        this.listenerUp.set(0, 1, 0).applyQuaternion(this.listenerQuaternion);
 
-        Howler.pos(
-            this.listenerPosition.x,
-            this.listenerPosition.y,
-            this.listenerPosition.z
-        );
+        Howler.pos(this.listenerPosition.x, this.listenerPosition.y, this.listenerPosition.z);
 
         Howler.orientation(
             this.listenerForward.x,
@@ -289,7 +270,7 @@ export class SoundManager {
             this.listenerForward.z,
             this.listenerUp.x,
             this.listenerUp.y,
-            this.listenerUp.z
+            this.listenerUp.z,
         );
     }
 
