@@ -8,9 +8,10 @@ import { addNightVisionCamera } from './nightVisionCamera.js';
 export const addWorld = async (scene, camera) => {
     const wallCollisions = new WallCollisions();
     await Promise.all([
-        document.fonts.load('190px "Special Elite"'),
-        document.fonts.load('190px "Caveat"'),
-        document.fonts.load('190px "Permanent Marker"'),
+        document.fonts.load('190px "BloodieCurse-Regular"'),
+        document.fonts.load('190px "Scary Witch"'),
+        document.fonts.load('190px "Shade Whisper"'),
+        document.fonts.load('190px "SlimeRage-Splatter"'),
     ]);
     const hotel = new Hotel(scene, {
         hallwayWidth: 4,

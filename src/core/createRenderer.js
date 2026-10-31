@@ -16,6 +16,5 @@ export async function createRenderer(canvas, sizes) {
 
     renderer.inspector = new Inspector();
     await renderer.init();
-
     return renderer;
 }

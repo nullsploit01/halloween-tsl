@@ -106,7 +106,7 @@ function getRandomPhrase() {
 
 const WRITING_STYLES = [
     {
-        font: 'Special Elite',
+        font: 'BloodieCurse-Regular',
         color: '#bcb3a0',
         weight: 'normal',
         opacity: 0.78,
@@ -114,7 +114,7 @@ const WRITING_STYLES = [
         rotation: 0.012,
     },
     {
-        font: 'Caveat',
+        font: 'Scary Witch',
         color: '#c1b49c',
         weight: '700',
         opacity: 0.85,
@@ -122,7 +122,7 @@ const WRITING_STYLES = [
         rotation: 0.045,
     },
     {
-        font: 'Permanent Marker',
+        font: 'Shade Whisper',
         color: '#a49a87',
         weight: 'normal',
         opacity: 0.72,
@@ -130,7 +130,7 @@ const WRITING_STYLES = [
         rotation: 0.025,
     },
     {
-        font: 'Special Elite',
+        font: 'SlimeRage-Splatter',
         color: '#743b34',
         weight: 'normal',
         opacity: 0.85,

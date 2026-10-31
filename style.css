@@ -1,4 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Special+Elite&display=swap');
+@font-face {
+    font-family: 'BloodieCurse-Regular';
+    src: url('/fonts/BloodieCurse-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Scary Witch';
+    src: url('/fonts/Scary Witch.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Shade Whisper';
+    src: url('/fonts/Shade Whisper.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'SlimeRage-Splatter';
+    src: url('/fonts/SlimeRage-Splatter.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
 
 * {
     margin: 0;
