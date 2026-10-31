@@ -12,6 +12,7 @@ import { Stalker } from './world/Stalker.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { ClusteredLighting } from 'three/examples/jsm/lighting/ClusteredLighting.js';
 import * as THREE from 'three/webgpu';
+import { Howler } from 'howler';
 
 const canvas = document.querySelector('canvas.threejs');
 
