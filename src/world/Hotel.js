@@ -1,11 +1,8 @@
 import { createHotelDoor } from './createHotelDoor';
 import { createFluorescentLight } from './createLighting';
 import { createTiledFloorGeometry } from './createTiledFloorGeometry';
+import { createWallWriting, updateWallWriting } from './createWallWriting';
 import * as THREE from 'three/webgpu';
-import {
-    createWallWriting,
-    updateWallWriting
-} from './createWallWriting';
 
 const textureLoader = new THREE.TextureLoader();
 
@@ -362,7 +359,7 @@ export class Hotel {
             hallwayHeight: this.hallwayHeight,
             intensity: 12,
             distance: 12,
-            color: 0xc91f2d
+            color: 0xc91f2d,
         });
 
         fixture.group.position.set(0, 0, 0);
@@ -396,7 +393,7 @@ export class Hotel {
 
         this.addRandomWallWriting(wall, {
             axis: isNorthOrSouth ? 'x' : 'z',
-            side: (direction === 'north' || direction === 'west') ? -1 : 1,
+            side: direction === 'north' || direction === 'west' ? -1 : 1,
             length: this.hallwayWidth,
             probability: 0.18,
         });
@@ -467,7 +464,7 @@ export class Hotel {
                 hallwayHeight: this.hallwayHeight,
                 intensity: 12,
                 distance: 9,
-                color: 0xff2929
+                color: 0xff2929,
             });
 
             if (isVertical) {
@@ -727,9 +724,7 @@ export class Hotel {
         // Select 60-80% of all fixtures
         const shuffled = [...fixtures].sort(() => Math.random() - 0.5);
 
-        const flickerCount = Math.ceil(
-            fixtures.length * (0.6 + Math.random() * 0.2)
-        );
+        const flickerCount = Math.ceil(fixtures.length * (0.6 + Math.random() * 0.2));
 
         shuffled.slice(0, flickerCount).forEach((fixture, index) => {
             // Small delay variation makes the event feel less artificial
@@ -746,14 +741,10 @@ export class Hotel {
         return position;
     }
 
-    addRandomWallWriting(wall, {
-        axis,
-        side,
-        length,
-        doorOffset = null,
-        doorWidth = 2,
-        probability = 0.3,
-    } = {}) {
+    addRandomWallWriting(
+        wall,
+        { axis, side, length, doorOffset = null, doorWidth = 2, probability = 0.3 } = {},
+    ) {
         if (Math.random() > probability) return;
 
         const writingWidth = THREE.MathUtils.randFloat(1.8, 3.2);
@@ -771,8 +762,7 @@ export class Hotel {
 
             const overlapsDoor =
                 doorOffset !== null &&
-                Math.abs(candidate - doorOffset) <
-                    doorWidth / 2 + writingWidth / 2 + 0.4;
+                Math.abs(candidate - doorOffset) < doorWidth / 2 + writingWidth / 2 + 0.4;
 
             if (!overlapsDoor) {
                 offset = candidate;
@@ -794,23 +784,13 @@ export class Hotel {
         const y = THREE.MathUtils.randFloat(0.55, 0.85);
 
         if (axis === 'x') {
-            writing.position.set(
-                offset,
-                y,
-                side === -1 ? 0.115 : -0.115
-            );
+            writing.position.set(offset, y, side === -1 ? 0.115 : -0.115);
 
             writing.rotation.y = side === -1 ? 0 : Math.PI;
         } else {
-            writing.position.set(
-                side === -1 ? 0.115 : -0.115,
-                y,
-                offset
-            );
+            writing.position.set(side === -1 ? 0.115 : -0.115, y, offset);
 
-            writing.rotation.y = side === -1
-                ? Math.PI / 2
-                : -Math.PI / 2;
+            writing.rotation.y = side === -1 ? Math.PI / 2 : -Math.PI / 2;
         }
 
         wall.add(writing);

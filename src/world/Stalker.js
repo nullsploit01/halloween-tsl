@@ -140,7 +140,7 @@ export class Stalker {
 
                 const currentDistance = new THREE.Vector2(
                     playerPosition.x - this.model.position.x,
-                    playerPosition.z - this.model.position.z
+                    playerPosition.z - this.model.position.z,
                 ).length();
 
                 if (currentDistance <= this.attackDistance) {

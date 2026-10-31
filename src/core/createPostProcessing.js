@@ -1,19 +1,9 @@
-
-import * as THREE from 'three/webgpu';
-
-import {
-    grayscale,
-    mix,
-    pass,
-    renderOutput,
-    uniform,
-    vec3
-} from 'three/tsl';
-
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { chromaticAberration } from 'three/addons/tsl/display/ChromaticAberrationNode.js';
 import { film } from 'three/addons/tsl/display/FilmNode.js';
 import { sobel } from 'three/addons/tsl/display/SobelOperatorNode.js';
-import { chromaticAberration } from 'three/addons/tsl/display/ChromaticAberrationNode.js';
+import { grayscale, mix, pass, renderOutput, uniform, vec3 } from 'three/tsl';
+import * as THREE from 'three/webgpu';
 
 export function createPostProcessing({ renderer, scene, camera }) {
     const renderPipeline = new THREE.RenderPipeline(renderer);
@@ -47,11 +37,7 @@ export function createPostProcessing({ renderer, scene, camera }) {
     const nightVisionView = film(nightVisionColor, grainIntensity);
 
     // Combine normal, Sobel and night vision
-    const combinedView = mix(
-        normalToSobel,
-        nightVisionView,
-        nightVisionEnabled
-    );
+    const combinedView = mix(normalToSobel, nightVisionView, nightVisionEnabled);
 
     // CHROMATIC ABERRATION
     const caStrength = uniform(0.35);
@@ -60,12 +46,7 @@ export function createPostProcessing({ renderer, scene, camera }) {
 
     const outputPass = renderOutput(combinedView);
 
-    const chromaticAberrationPass = chromaticAberration(
-        outputPass,
-        caStrength,
-        caCenter,
-        caScale
-    );
+    const chromaticAberrationPass = chromaticAberration(outputPass, caStrength, caCenter, caScale);
 
     renderPipeline.outputNode = chromaticAberrationPass;
 
@@ -108,8 +89,7 @@ export function createPostProcessing({ renderer, scene, camera }) {
             const transitionSpeed = 7;
 
             sobelAmount.value +=
-                (sobelTarget - sobelAmount.value) *
-                (1 - Math.exp(-transitionSpeed * deltaTime));
-        }
+                (sobelTarget - sobelAmount.value) * (1 - Math.exp(-transitionSpeed * deltaTime));
+        },
     };
 }

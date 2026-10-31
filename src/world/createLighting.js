@@ -1,11 +1,10 @@
-
 import * as THREE from 'three/webgpu';
 
-export function createLightFlicker(light, panel, {
-    baseIntensity,
-    enabled = true,
-    flickerChance = 0.65,
-} = {}) {
+export function createLightFlicker(
+    light,
+    panel,
+    { baseIntensity, enabled = true, flickerChance = 0.65 } = {},
+) {
     let active = enabled;
     let elapsed = 0;
 
@@ -26,9 +25,7 @@ export function createLightFlicker(light, panel, {
     function applyIntensity(factor) {
         light.intensity = baseIntensity * factor;
 
-        panel.material.color
-            .copy(basePanelColor)
-            .multiplyScalar(factor);
+        panel.material.color.copy(basePanelColor).multiplyScalar(factor);
     }
 
     function update(deltaTime) {
@@ -120,9 +117,7 @@ export function createLightFlicker(light, panel, {
         flickerType = type;
         flickerTime = 0;
 
-        flickerDuration = type === 'glitch'
-            ? 0.8 + Math.random() * 1.8
-            : 0.3 + Math.random() * 0.5;
+        flickerDuration = type === 'glitch' ? 0.8 + Math.random() * 1.8 : 0.3 + Math.random() * 0.5;
     }
 
     return {
@@ -132,7 +127,6 @@ export function createLightFlicker(light, panel, {
         triggerFlicker,
     };
 }
-
 
 export function createFluorescentLight({
     hallwayHeight,
@@ -156,12 +150,7 @@ export function createFluorescentLight({
     group.add(panel);
 
     // Actual clustered illumination.
-    const light = new THREE.PointLight(
-        color,
-        intensity,
-        distance,
-        2,
-    );
+    const light = new THREE.PointLight(color, intensity, distance, 2);
 
     light.position.set(0, hallwayHeight - 0.9, 0);
     light.castShadow = false;
@@ -188,6 +177,6 @@ export function createFluorescentLight({
 
         triggerFlicker(type = 'glitch') {
             flicker.triggerFlicker(type);
-        }
+        },
     };
 }

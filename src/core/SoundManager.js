@@ -9,22 +9,18 @@ export class SoundManager {
         maxConcurrentEnvironmentSounds = 2,
         masterVolume = 1,
     } = {}) {
+        this.sounds = new Map();
+        this.activeSounds = new Map();
+
         this.masterVolume = masterVolume;
-        Howler.volume(masterVolume);
-
-        // Ambience
-        this.ambiences = new Map();
-        this.currentAmbience = null;
-
-        // Environmental sounds
-        this.environmentSounds = [];
-        this.environmentSources = [];
-        this.activeEnvironmentSounds = new Set();
+        this.enabled = true;
 
         this.minEnvironmentInterval = minEnvironmentInterval;
         this.maxEnvironmentInterval = maxEnvironmentInterval;
-        this.maxConcurrentEnvironmentSounds =
-            maxConcurrentEnvironmentSounds;
+        this.maxConcurrentEnvironmentSounds = maxConcurrentEnvironmentSounds;
+
+        this.environmentSources = [];
+        this.activeEnvironmentSounds = new Set();
 
         this.environmentTimer = 0;
         this.nextEnvironmentTime = this.randomEnvironmentInterval();
@@ -32,142 +28,180 @@ export class SoundManager {
         this.elapsedTime = 0;
         this.lastEnvironmentSound = null;
 
-        this.enabled = true;
-
-        // Reusable listener vectors
         this.listenerPosition = new THREE.Vector3();
         this.listenerForward = new THREE.Vector3();
         this.listenerUp = new THREE.Vector3();
         this.listenerQuaternion = new THREE.Quaternion();
+
+        Howler.volume(masterVolume);
     }
 
-    // --------------------------------------------------
-    // AMBIENCE
-    // --------------------------------------------------
+    // SOUND REGISTRATION
 
-    addAmbience(name, src, volume = 0.3) {
-        const howl = new Howl({
-            src: [src],
-            loop: true,
-            volume,
-            preload: true,
-        });
-
-        this.ambiences.set(name, {
-            howl,
-            volume,
-        });
-    }
-
-    playAmbience(name, fadeDuration = 2000) {
-        if (!this.enabled) return;
-
-        const next = this.ambiences.get(name);
-
-        if (!next) {
-            console.warn(`Ambience not found: ${name}`);
-            return;
+    registerSound(name, src, options = {}) {
+        if (this.sounds.has(name)) {
+            this.unregisterSound(name);
         }
 
-        if (this.currentAmbience?.name === name) return;
-
-        // Fade out previous ambience.
-        if (this.currentAmbience) {
-            const previous = this.currentAmbience;
-
-            previous.howl.fade(
-                previous.howl.volume(previous.id),
-                0,
-                fadeDuration,
-                previous.id
-            );
-
-            previous.howl.once('fade', () => {
-                previous.howl.stop(previous.id);
-            }, previous.id);
-        }
-
-        // Start new ambience.
-        const id = next.howl.play();
-
-        next.howl.volume(0, id);
-
-        next.howl.fade(
-            0,
-            next.volume,
-            fadeDuration,
-            id
-        );
-
-        this.currentAmbience = {
-            name,
-            howl: next.howl,
-            id,
-        };
-    }
-
-    stopAmbience(fadeDuration = 2000) {
-        if (!this.currentAmbience) return;
-
-        const current = this.currentAmbience;
-
-        current.howl.fade(
-            current.howl.volume(current.id),
-            0,
-            fadeDuration,
-            current.id
-        );
-
-        current.howl.once('fade', () => {
-            current.howl.stop(current.id);
-        }, current.id);
-
-        this.currentAmbience = null;
-    }
-
-    // --------------------------------------------------
-    // ENVIRONMENTAL SOUNDS
-    // --------------------------------------------------
-
-    addEnvironmentSound({
-        name,
-        src,
-        volume = 0.4,
-        weight = 1,
-        cooldown = 30,
-    }) {
         const howl = new Howl({
-            src: [src],
-            volume,
+            src: Array.isArray(src) ? src : [src],
             preload: true,
+            volume: options.volume ?? 1,
+            loop: options.loop ?? false,
+            rate: options.rate ?? 1,
+            html5: options.html5 ?? false,
             pannerAttr: {
                 panningModel: 'HRTF',
                 distanceModel: 'inverse',
-                refDistance: 2,
-                rolloffFactor: 1,
-                maxDistance: 25,
+                refDistance: options.refDistance ?? 2,
+                rolloffFactor: options.rolloffFactor ?? 1,
+                maxDistance: options.maxDistance ?? 25,
             },
         });
 
-        this.environmentSounds.push({
-            name,
+        this.sounds.set(name, {
             howl,
-            volume,
-            weight,
-            cooldown,
+            volume: options.volume ?? 1,
+            loop: options.loop ?? false,
+            positional: options.positional ?? false,
+            weight: options.weight ?? 1,
+            cooldown: options.cooldown ?? 0,
             lastPlayed: -Infinity,
         });
+
+        return howl;
     }
+
+    unregisterSound(name) {
+        const sound = this.sounds.get(name);
+
+        if (!sound) return;
+
+        sound.howl.stop();
+        sound.howl.unload();
+
+        this.sounds.delete(name);
+    }
+
+    // GENERIC PLAYBACK
+
+    playSound(name, options = {}) {
+        if (!this.enabled) return null;
+
+        const sound = this.sounds.get(name);
+
+        if (!sound) {
+            console.warn(`Sound "${name}" is not registered.`);
+            return null;
+        }
+
+        if (
+            options.respectCooldown &&
+            this.elapsedTime - sound.lastPlayed < sound.cooldown
+        ) {
+            return null;
+        }
+
+        if (options.positional && !options.position) {
+            console.warn(`Sound "${name}" requires a position.`);
+            return null;
+        }
+
+        const id = sound.howl.play();
+
+        const volume = options.volume ?? sound.volume;
+        const rate = options.rate ?? sound.howl.rate();
+
+        sound.howl.volume(options.fadeIn ? 0 : volume, id);
+        sound.howl.rate(rate, id);
+        sound.howl.loop(options.loop ?? sound.loop, id);
+
+        if (options.positional) {
+            sound.howl.pos(
+                options.position.x,
+                options.position.y,
+                options.position.z,
+                id
+            );
+        }
+
+        if (options.stereo !== undefined) {
+            sound.howl.stereo(options.stereo, id);
+        }
+
+        if (options.seek !== undefined) {
+            sound.howl.seek(options.seek, id);
+        }
+
+        if (options.fadeIn) {
+            sound.howl.fade(0, volume, options.fadeIn, id);
+        }
+
+        if (options.onEnd) {
+            sound.howl.once('end', options.onEnd, id);
+        }
+
+        const activeId = `${name}:${id}`;
+
+        this.activeSounds.set(activeId, {
+            name,
+            id,
+            howl: sound.howl,
+        });
+
+        sound.lastPlayed = this.elapsedTime;
+
+        sound.howl.once('end', () => {
+            this.activeSounds.delete(activeId);
+            this.activeEnvironmentSounds.delete(activeId);
+        }, id);
+
+        if (options.environment) {
+            this.activeEnvironmentSounds.add(activeId);
+            this.lastEnvironmentSound = name;
+        }
+
+        return id;
+    }
+
+    // SOUND CONTROL
+
+    stopSound(name, id) {
+        const sound = this.sounds.get(name);
+
+        if (!sound) return;
+
+        if (id !== undefined) {
+            sound.howl.stop(id);
+            this.activeSounds.delete(`${name}:${id}`);
+            this.activeEnvironmentSounds.delete(`${name}:${id}`);
+        } else {
+            sound.howl.stop();
+
+            for (const [activeId, active] of this.activeSounds) {
+                if (active.name === name) {
+                    this.activeSounds.delete(activeId);
+                    this.activeEnvironmentSounds.delete(activeId);
+                }
+            }
+        }
+    }
+
+    fadeSound(name, id, from, to, duration) {
+        const sound = this.sounds.get(name);
+
+        if (!sound) return;
+
+        sound.howl.fade(from, to, duration, id);
+    }
+
+    // ENVIRONMENTAL RANDOM PLAYBACK
 
     setEnvironmentSources(positions) {
         this.environmentSources = positions.map(position =>
             position.clone
                 ? position.clone()
-                : new THREE.Vector3(
-                    position.x,
-                    position.y,
-                    position.z
-                )
+                : new THREE.Vector3(position.x, position.y, position.z)
         );
     }
 
@@ -178,93 +212,59 @@ export class SoundManager {
         );
     }
 
-    chooseEnvironmentSound() {
-        const available = this.environmentSounds.filter(sound => {
-            const cooldownFinished =
-                this.elapsedTime - sound.lastPlayed >= sound.cooldown;
+    playRandomEnvironmentSound() {
+        if (
+            !this.enabled ||
+            !this.environmentSources.length ||
+            this.activeEnvironmentSounds.size >= this.maxConcurrentEnvironmentSounds
+        ) {
+            return null;
+        }
 
-            return (
-                cooldownFinished &&
-                sound.name !== this.lastEnvironmentSound
-            );
-        });
+        const available = [...this.sounds.entries()]
+            .filter(([name, sound]) => {
+                return (
+                    sound.positional &&
+                    sound.weight > 0 &&
+                    this.elapsedTime - sound.lastPlayed >= sound.cooldown &&
+                    name !== this.lastEnvironmentSound
+                );
+            });
 
         if (!available.length) return null;
 
         const totalWeight = available.reduce(
-            (sum, sound) => sum + sound.weight,
+            (sum, [, sound]) => sum + sound.weight,
             0
         );
 
         let random = Math.random() * totalWeight;
+        let selected = available[available.length - 1];
 
-        for (const sound of available) {
-            random -= sound.weight;
+        for (const entry of available) {
+            random -= entry[1].weight;
 
-            if (random <= 0) return sound;
+            if (random <= 0) {
+                selected = entry;
+                break;
+            }
         }
 
-        return available[available.length - 1];
+        const [name] = selected;
+
+        const position = this.environmentSources[
+            THREE.MathUtils.randInt(0, this.environmentSources.length - 1)
+        ];
+
+        return this.playSound(name, {
+            positional: true,
+            position,
+            volume: selected[1].volume * THREE.MathUtils.randFloat(0.65, 1),
+            environment: true,
+        });
     }
 
-    playEnvironmentSound(name = null) {
-        if (
-            !this.enabled ||
-            !this.environmentSources.length ||
-            this.activeEnvironmentSounds.size >=
-                this.maxConcurrentEnvironmentSounds
-        ) {
-            return;
-        }
-
-        const sound = name
-            ? this.environmentSounds.find(s => s.name === name)
-            : this.chooseEnvironmentSound();
-
-        if (!sound) return;
-
-        if (
-            this.elapsedTime - sound.lastPlayed < sound.cooldown
-        ) {
-            return;
-        }
-
-        const sourceIndex = THREE.MathUtils.randInt(
-            0,
-            this.environmentSources.length - 1
-        );
-
-        const position = this.environmentSources[sourceIndex];
-
-        const volume = sound.volume *
-            THREE.MathUtils.randFloat(0.65, 1);
-
-        const id = sound.howl.play();
-
-        sound.howl.volume(volume, id);
-
-        sound.howl.pos(
-            position.x,
-            position.y,
-            position.z,
-            id
-        );
-
-        const activeId = `${sound.name}:${id}`;
-
-        this.activeEnvironmentSounds.add(activeId);
-
-        sound.howl.once('end', () => {
-            this.activeEnvironmentSounds.delete(activeId);
-        }, id);
-
-        sound.lastPlayed = this.elapsedTime;
-        this.lastEnvironmentSound = sound.name;
-    }
-
-    // --------------------------------------------------
     // 3D LISTENER
-    // --------------------------------------------------
 
     updateListener(camera) {
         if (!camera) return;
@@ -293,9 +293,7 @@ export class SoundManager {
         );
     }
 
-    // --------------------------------------------------
     // UPDATE
-    // --------------------------------------------------
 
     update(deltaTime, camera) {
         if (!this.enabled) return;
@@ -306,17 +304,14 @@ export class SoundManager {
         this.environmentTimer += deltaTime;
 
         if (this.environmentTimer >= this.nextEnvironmentTime) {
-            this.playEnvironmentSound();
+            this.playRandomEnvironmentSound();
 
             this.environmentTimer = 0;
-            this.nextEnvironmentTime =
-                this.randomEnvironmentInterval();
+            this.nextEnvironmentTime = this.randomEnvironmentInterval();
         }
     }
 
-    // --------------------------------------------------
     // GLOBAL CONTROLS
-    // --------------------------------------------------
 
     setMasterVolume(volume) {
         this.masterVolume = THREE.MathUtils.clamp(volume, 0, 1);
@@ -327,43 +322,40 @@ export class SoundManager {
         this.enabled = enabled;
 
         if (!enabled) {
-            this.stopAmbience(0);
-
-            for (const sound of this.environmentSounds) {
-                sound.howl.stop();
-            }
-
-            this.activeEnvironmentSounds.clear();
+            this.stopAll();
         } else {
             this.environmentTimer = 0;
-            this.nextEnvironmentTime =
-                this.randomEnvironmentInterval();
+            this.nextEnvironmentTime = this.randomEnvironmentInterval();
         }
     }
 
     stopAll() {
-        this.stopAmbience(0);
-
-        for (const sound of this.environmentSounds) {
+        for (const sound of this.sounds.values()) {
             sound.howl.stop();
         }
 
+        this.activeSounds.clear();
         this.activeEnvironmentSounds.clear();
+    }
+
+    pauseAll() {
+        Howler.pause();
+    }
+
+    resumeAll() {
+        if (this.enabled) {
+            Howler.resume();
+        }
     }
 
     dispose() {
         this.stopAll();
 
-        for (const { howl } of this.ambiences.values()) {
-            howl.unload();
-        }
-
-        for (const sound of this.environmentSounds) {
+        for (const sound of this.sounds.values()) {
             sound.howl.unload();
         }
 
-        this.ambiences.clear();
-        this.environmentSounds = [];
+        this.sounds.clear();
         this.environmentSources = [];
     }
 }

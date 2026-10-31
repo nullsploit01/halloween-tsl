@@ -1,4 +1,5 @@
-import { SoundManager } from "../core/SoundManager";
+import { SoundManager } from '../core/SoundManager';
+import * as THREE from 'three/webgpu';
 
 const soundManager = new SoundManager({
     minEnvironmentInterval: 15,
@@ -7,46 +8,48 @@ const soundManager = new SoundManager({
     masterVolume: 0.8,
 });
 
-soundManager.addAmbience(
-    'creepy',
-    '/sounds/ambience/creepy-1.mp3',
-    0.3
-);
+// Continuous ambience
+soundManager.registerSound('creepy', '/sounds/ambience/creepy-2.mp3', {
+    volume: 0.3,
+    loop: true,
+});
 
-soundManager.addAmbience(
-    'ventilation',
-    '/sounds/ambience/ventilation.mp3',
-    0.6
-);
+soundManager.registerSound('ventilation', '/sounds/ambience/ventilation.mp3', {
+    volume: 0.6,
+    loop: true,
+});
 
-soundManager.addAmbience(
-    'lightBuzz',
-    '/sounds/ambience/light-buzz.mp3',
-    0.4
-);
+soundManager.registerSound('lightBuzz', '/sounds/ambience/light-buzz.mp3', {
+    volume: 0.4,
+    loop: true,
+});
 
-soundManager.addEnvironmentSound({
-    name: 'door-creak',
-    src: '/sounds/environment/door-creak.mp3',
+// Random environmental sounds
+soundManager.registerSound('door-creak', '/sounds/environment/door-creak.mp3', {
     volume: 0.25,
+    positional: true,
     weight: 3,
     cooldown: 20,
 });
 
-soundManager.addEnvironmentSound({
-    name: 'look-behind-you',
-    src: '/sounds/environment/look-behind-you.mp3',
+soundManager.registerSound('look-behind-you', '/sounds/environment/look-behind-you.mp3', {
     volume: 0.35,
+    positional: true,
     weight: 1,
     cooldown: 45,
 });
 
-soundManager.addEnvironmentSound({
-    name: 'i-see-you-whisper',
-    src: '/sounds/environment/i-see-you-whisper.mp3',
+soundManager.registerSound('i-see-you-whisper', '/sounds/environment/i-see-you-whisper.mp3', {
     volume: 0.2,
+    positional: true,
     weight: 1,
     cooldown: 60,
+});
+
+// General sound effects
+soundManager.registerSound('woosh', '/sounds/general/woosh.mp3', {
+    volume: 0.2,
+    positional: false,
 });
 
 soundManager.setEnvironmentSources([

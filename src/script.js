@@ -5,14 +5,16 @@ import { createScene } from './core/createScene.js';
 import { addLighting } from './core/lighting.js';
 import { Sizes } from './core/Sizes.js';
 import { createCameraHud } from './ui/createCameraHud.js';
+import { LoadingScreen } from './ui/LoadingScreen.js';
 import { addWorld } from './world/addWorld.js';
 import { ElevatorDoor } from './world/ElevatorDoor.js';
 import { JunctionBox } from './world/JunctionBox.js';
 import { Stalker } from './world/Stalker.js';
+import { Howler } from 'howler';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { ClusteredLighting } from 'three/examples/jsm/lighting/ClusteredLighting.js';
+import {soundManager} from './world/addSounds.js';
 import * as THREE from 'three/webgpu';
-import { Howler } from 'howler';
 
 const canvas = document.querySelector('canvas.threejs');
 
@@ -26,7 +28,11 @@ camera.position.set(0, 1.7, 0);
 
 const renderer = await createRenderer(canvas, sizes);
 
+const loadingScreen = new LoadingScreen(renderer);
+loadingScreen.start();
+
 renderer.lighting = new ClusteredLighting(256, 32, 24, 32);
+loadingScreen.setProgress(5, 'INITIALIZING GRAPHICS...');
 
 const controls = new PointerLockControls(camera, document.body);
 
@@ -38,7 +44,13 @@ const postProcessing = createPostProcessing({
 
 const { ambientLight } = addLighting({ scene, renderer });
 
-const { lantern, hotel, lanternLight, setLanternVisible, nightVisionCamera } = await addWorld(scene, camera);
+const { lantern, hotel, lanternLight, setLanternVisible, nightVisionCamera } = await addWorld(
+    scene,
+    camera,
+    (progress, message) => {
+        loadingScreen.setProgress(progress, message);
+    },
+);
 
 let activatedBoxCount = 0;
 const elevatorDoor = new ElevatorDoor(scene);
@@ -51,7 +63,24 @@ const stalker = new Stalker(scene, {
 
 await stalker.load();
 
-canvas.addEventListener('click', () => {
+loadingScreen.setProgress(90, 'SOMETHING IS MOVING...');
+
+loadingScreen.ready();
+
+loadingScreen.onEnter(async () => {
+    await Howler.ctx?.resume();
+
+    soundManager.playSound('woosh')
+
+    setTimeout(() => {
+        loadingScreen.hide();
+    }, 400);
+
+    setTimeout(() => {
+        soundManager.playSound('ventilation')
+        soundManager.playSound('lightBuzz')
+    }, 700);
+
     controls.lock();
 });
 
@@ -89,7 +118,6 @@ async function setNightVision(enabled) {
     nightVisionTransitioning = true;
     setLanternVisible(false);
     if (enabled) {
-
         // Raise the camera into view.
         const completed = await nightVisionCamera.show({
             duration: 650,
@@ -168,7 +196,6 @@ function spawnNextJunctionBox() {
     return true;
 }
 
-
 const systemMessage = document.createElement('div');
 systemMessage.className = 'system-message';
 document.body.append(systemMessage);
@@ -184,13 +211,7 @@ function showSystemMessage(message, type = 'info', duration = 2500) {
 
     systemMessage.textContent = message;
 
-    systemMessage.classList.remove(
-        'is-visible',
-        'success',
-        'info',
-        'warning',
-        'error'
-    );
+    systemMessage.classList.remove('is-visible', 'success', 'info', 'warning', 'error');
 
     // Apply new type
     systemMessage.classList.add(type);
@@ -207,8 +228,6 @@ function showSystemMessage(message, type = 'info', duration = 2500) {
     }, duration);
 }
 
-
-
 function triggerPowerOutage() {
     if (powerOutageTriggered) return;
 
@@ -221,12 +240,17 @@ function triggerPowerOutage() {
 
     stalker.spawn(hotel, camera.position);
 
-    showSystemMessage(
-        'POWER FAILURE — A STALKER IS LOOKING FOR YOU',
-        'error'
-    );
-}
+    setTimeout(() => {
+        soundManager.stopSound('ventilation')
+        soundManager.stopSound('lightBuzz')
+    }, 100);
 
+    setTimeout(() => {
+        soundManager.playSound('creepy')
+    }, 300);
+
+    showSystemMessage('POWER FAILURE — A STALKER IS LOOKING FOR YOU', 'error');
+}
 
 const interactionHint = document.createElement('div');
 interactionHint.className = 'interaction-hint';
@@ -267,7 +291,7 @@ function handleInteraction() {
         setTimeout(() => {
             triggerPowerOutage();
         }, 2000);
-        
+
         const spawned = spawnNextJunctionBox();
         return;
     }
@@ -295,10 +319,12 @@ function respawnPlayer() {
     setLanternVisible(false);
     setNightVision(false);
 
-    showSystemMessage(
-        'SESSION RESTARTED — GOOD LUCK', 
-        'success'
-    );
+    soundManager.stopSound('creepy');
+
+    soundManager.playSound('ventilation');
+    soundManager.playSound('lightBuzz');
+
+    showSystemMessage('SESSION RESTARTED — GOOD LUCK', 'success');
 }
 
 window.addEventListener('keydown', (event) => {
@@ -339,7 +365,7 @@ window.addEventListener('keydown', (event) => {
     }
 
     if (event.code === 'KeyE') {
-        hotel.triggerCorridorLightGlitch()
+        hotel.triggerCorridorLightGlitch();
         handleInteraction();
     }
 
@@ -435,11 +461,7 @@ function tick() {
 
     updateInteractionHint();
 
-    const playerWasCaught = stalker.update(
-        camera.position,
-        deltaTime,
-        hotel
-    );
+    const playerWasCaught = stalker.update(camera.position, deltaTime, hotel);
 
     if (playerWasCaught) {
         respawnPlayer();

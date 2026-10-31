@@ -1,4 +1,3 @@
-
 import { GLTFLoader } from 'three/addons/Addons.js';
 import * as THREE from 'three/webgpu';
 
@@ -21,11 +20,7 @@ export async function addNightVisionCamera(camera) {
     camera.add(device);
 
     // Adjust these after checking your camera model.
-    const restingPosition = new THREE.Vector3(
-        0.32,
-        -0.08,
-        -0.85
-    );
+    const restingPosition = new THREE.Vector3(0.32, -0.08, -0.85);
 
     const hiddenPosition = restingPosition.clone();
     hiddenPosition.y -= 0.85;
@@ -59,11 +54,7 @@ export async function addNightVisionCamera(camera) {
                     return;
                 }
 
-                const t = THREE.MathUtils.clamp(
-                    (now - startTime) / duration,
-                    0,
-                    1
-                );
+                const t = THREE.MathUtils.clamp((now - startTime) / duration, 0, 1);
 
                 // Smooth ease-out.
                 const eased = 1 - Math.pow(1 - t, 3);
@@ -71,8 +62,7 @@ export async function addNightVisionCamera(camera) {
                 device.position.lerpVectors(from, to, eased);
 
                 // Small settling motion.
-                device.position.y +=
-                    Math.sin(t * Math.PI) * 0.025;
+                device.position.y += Math.sin(t * Math.PI) * 0.025;
 
                 if (t < 1) {
                     animationFrame = requestAnimationFrame(tick);
@@ -93,11 +83,7 @@ export async function addNightVisionCamera(camera) {
         device.visible = true;
         device.position.copy(hiddenPosition);
 
-        return animatePosition(
-            hiddenPosition,
-            restingPosition,
-            duration
-        ).finally(() => {
+        return animatePosition(hiddenPosition, restingPosition, duration).finally(() => {
             device.visible = false;
         });
     }
@@ -107,11 +93,7 @@ export async function addNightVisionCamera(camera) {
 
         device.visible = true;
 
-        const completed = await animatePosition(
-            device.position.clone(),
-            hiddenPosition,
-            duration
-        );
+        const completed = await animatePosition(device.position.clone(), hiddenPosition, duration);
 
         if (completed) {
             device.visible = false;
