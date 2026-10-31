@@ -147,7 +147,7 @@ export function createFluorescentLight({
     const panel = new THREE.Mesh(
         new THREE.BoxGeometry(1.2, 0.045, 0.4),
         new THREE.MeshBasicMaterial({
-            color: 0xe4edf2,
+            color: 0x9e2020,
             toneMapped: false,
         }),
     );

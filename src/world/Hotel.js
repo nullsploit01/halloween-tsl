@@ -362,7 +362,7 @@ export class Hotel {
             hallwayHeight: this.hallwayHeight,
             intensity: 12,
             distance: 12,
-            color: 0xd6c5a1
+            color: 0xc91f2d
         });
 
         fixture.group.position.set(0, 0, 0);
@@ -467,7 +467,7 @@ export class Hotel {
                 hallwayHeight: this.hallwayHeight,
                 intensity: 12,
                 distance: 9,
-                color: 0xe8d9b5
+                color: 0xff2929
             });
 
             if (isVertical) {
