@@ -67,6 +67,21 @@ soundManager.registerSound('slow-walking', '/sounds/footsteps/slow-walking.mp3',
     positional: false,
 });
 
+soundManager.registerSound('stalkerRunning', '/sounds/stalker/running.mp3', {
+    volume: 0.4,
+    positional: true,
+});
+
+soundManager.registerSound('stalkerWhisper', '/sounds/stalker/whisper.mp3', {
+    volume: 0.2,
+    positional: true,
+});
+
+soundManager.registerSound('stalkerWhispers', '/sounds/stalker/whispers.mp3', {
+    volume: 0.2,
+    positional: true,
+});
+
 soundManager.setEnvironmentSources([
     new THREE.Vector3(0, 2, -12),
     new THREE.Vector3(5, 1.5, -20),

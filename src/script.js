@@ -67,6 +67,8 @@ loadingScreen.setProgress(90, 'SOMETHING IS MOVING...');
 
 loadingScreen.ready();
 
+let hasGameStarted = false;
+
 loadingScreen.onEnter(async () => {
     await Howler.ctx?.resume();
 
@@ -81,6 +83,12 @@ loadingScreen.onEnter(async () => {
         soundManager.playSound('lightBuzz');
     }, 700);
 
+    hasGameStarted = true;
+    controls.lock();
+});
+
+window.addEventListener('click', () => {
+    if (!hasGameStarted) return;
     controls.lock();
 });
 
@@ -327,6 +335,100 @@ function respawnPlayer() {
     showSystemMessage('SESSION RESTARTED — GOOD LUCK', 'success');
 }
 
+let stalkerWhispersId = null;
+let stalkerWhisperId = null;
+let stalkerRunningId = null;
+
+let previousStalkerState = null;
+
+const stalkerAudioPosition = new THREE.Vector3();
+
+function updateStalkerAudio() {
+    if (!stalker.model || !stalker.hasSpawned) return;
+
+    stalker.model.getWorldPosition(stalkerAudioPosition);
+
+    // Replace isChasing with your actual chase/spotting condition.
+    const isChasing = stalker.isChasing;
+
+    const currentState = isChasing ? 'chasing' : 'idle';
+
+    if (currentState !== previousStalkerState) {
+        // Stop previous state sounds
+        if (stalkerWhispersId !== null) {
+            soundManager.stopSound('stalkerWhispers', stalkerWhispersId);
+            stalkerWhispersId = null;
+        }
+
+        if (stalkerWhisperId !== null) {
+            soundManager.stopSound('stalkerWhisper', stalkerWhisperId);
+            stalkerWhisperId = null;
+        }
+
+        if (stalkerRunningId !== null) {
+            soundManager.stopSound('stalkerRunning', stalkerRunningId);
+            stalkerRunningId = null;
+        }
+
+        if (isChasing) {
+            // She spotted the player
+            stalkerWhisperId = soundManager.playSound(
+                'stalkerWhisper',
+                {
+                    positional: true,
+                    position: stalkerAudioPosition,
+                }
+            );
+
+            stalkerRunningId = soundManager.playSound(
+                'stalkerRunning',
+                {
+                    positional: true,
+                    position: stalkerAudioPosition,
+                    loop: true,
+                }
+            );
+        } else {
+            // She is stalking the player
+            stalkerWhispersId = soundManager.playSound(
+                'stalkerWhispers',
+                {
+                    positional: true,
+                    position: stalkerAudioPosition,
+                    loop: true,
+                }
+            );
+        }
+
+        previousStalkerState = currentState;
+    }
+
+    // Keep active sounds attached to the moving Stalker
+    if (stalkerWhispersId !== null) {
+        soundManager.sounds.get('stalkerWhispers')
+            .howl.pos(
+                ...stalkerAudioPosition.toArray(),
+                stalkerWhispersId
+            );
+    }
+
+    if (stalkerWhisperId !== null) {
+        soundManager.sounds.get('stalkerWhisper')
+            .howl.pos(
+                ...stalkerAudioPosition.toArray(),
+                stalkerWhisperId
+            );
+    }
+
+    if (stalkerRunningId !== null) {
+        soundManager.sounds.get('stalkerRunning')
+            .howl.pos(
+                ...stalkerAudioPosition.toArray(),
+                stalkerRunningId
+            );
+    }
+}
+
 window.addEventListener('keydown', (event) => {
     if (event.repeat) return;
 
@@ -486,6 +588,7 @@ function tick() {
     updateInteractionHint();
 
     const playerWasCaught = stalker.update(camera.position, deltaTime, hotel);
+    updateStalkerAudio();
 
     if (playerWasCaught) {
         respawnPlayer();
