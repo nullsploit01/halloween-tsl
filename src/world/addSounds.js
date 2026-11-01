@@ -9,8 +9,8 @@ const soundManager = new SoundManager({
 });
 
 // Continuous ambience
-soundManager.registerSound('creepy', '/sounds/ambience/creepy-2.mp3', {
-    volume: 0.3,
+soundManager.registerSound('creepy', '/sounds/ambience/creepy.mp3', {
+    volume: 0.9,
     loop: true,
 });
 

@@ -63,9 +63,7 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
         }
 
         // Supports a THREE.Group directly, or objects containing group/model.
-        const targetObject = target.isObject3D
-            ? target
-            : target.group ?? target.model;
+        const targetObject = target.isObject3D ? target : (target.group ?? target.model);
 
         if (!targetObject || targetObject.visible === false) {
             signal.style.display = 'none';
@@ -93,11 +91,9 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
         directionToTarget.normalize();
 
         const angle = Math.atan2(
-            cameraForward.x * directionToTarget.z -
-                cameraForward.z * directionToTarget.x,
+            cameraForward.x * directionToTarget.z - cameraForward.z * directionToTarget.x,
 
-            cameraForward.x * directionToTarget.x +
-                cameraForward.z * directionToTarget.z
+            cameraForward.x * directionToTarget.x + cameraForward.z * directionToTarget.z,
         );
 
         const absoluteAngle = Math.abs(angle);
@@ -116,11 +112,7 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
         signalDirection.textContent = relativeDirection;
         signalDistance.textContent = Math.ceil(distance);
 
-        const signalStrength = THREE.MathUtils.clamp(
-            1 - (distance - 5) / (100 - 5),
-            0.15,
-            1
-        );
+        const signalStrength = THREE.MathUtils.clamp(1 - (distance - 5) / (100 - 5), 0.15, 1);
 
         signalArrow.style.transform = `rotate(${angle}rad)`;
 

@@ -113,6 +113,15 @@ export class JunctionBox {
         return true;
     }
 
+    resetSpawn() {
+        this.group.removeFromParent();
+
+        this.node = null;
+        this.hasSpawned = false;
+
+        this.reset();
+    }
+
     update(playerPosition, deltaTime) {
         if (this.state !== 'activating') return false;
 
@@ -144,5 +153,15 @@ export class JunctionBox {
 
     get activationProgress() {
         return Math.min(this.activationTime / this.activationDuration, 1);
+    }
+
+    reset() {
+        this.state = 'off';
+        this.activationTime = 0;
+
+        this.warningLight.material.color.setHex(0xff2a1a);
+
+        this.beacon.color.setHex(0xff1a1a);
+        this.beacon.intensity = 4;
     }
 }

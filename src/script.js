@@ -5,6 +5,7 @@ import { createScene } from './core/createScene.js';
 import { addLighting } from './core/lighting.js';
 import { Sizes } from './core/Sizes.js';
 import { createCameraHud } from './ui/createCameraHud.js';
+import { createControlsHud } from './ui/createControlsHud.js';
 import { LoadingScreen } from './ui/LoadingScreen.js';
 import { soundManager } from './world/addSounds.js';
 import { addWorld } from './world/addWorld.js';
@@ -15,7 +16,6 @@ import { Howler } from 'howler';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { ClusteredLighting } from 'three/examples/jsm/lighting/ClusteredLighting.js';
 import * as THREE from 'three/webgpu';
-import { createControlsHud } from './ui/createControlsHud.js';
 
 const canvas = document.querySelector('canvas.threejs');
 
@@ -72,13 +72,14 @@ loadingScreen.ready();
 let hasGameStarted = false;
 let senseTarget = null;
 let senseTargetName = null;
+let junctionSpawnTimeout = null;
 
 loadingScreen.onEnter(async () => {
     await Howler.ctx?.resume();
 
     soundManager.playSound('woosh');
-    
-    senseTarget = elevatorDoor
+
+    senseTarget = elevatorDoor;
     senseTargetName = 'ELEVATOR DOOR';
 
     setTimeout(() => {
@@ -297,8 +298,8 @@ function handleInteraction() {
     soundManager.playSound('junction-press');
     const startedBox = activeJunctionBox?.beginActivation(camera.position);
     if (startedBox) {
-        return
-    };
+        return;
+    }
 
     const elevatorMessage = elevatorDoor.call(camera.position);
 
@@ -318,25 +319,43 @@ function handleInteraction() {
 }
 
 function respawnPlayer() {
-    // Move player to the starting junction
-    camera.position.copy(hotel.getPlayerStartPosition());
+    // Cancel any pending junction-box spawn.
+    clearTimeout(junctionSpawnTimeout);
+    junctionSpawnTimeout = null;
 
-    // Reset camera orientation
+    // Reset player position and orientation.
+    camera.position.copy(hotel.getPlayerStartPosition());
     camera.rotation.set(0, 0, 0);
 
-    // Reset stalker
+    // Reset stalker.
     stalker.despawn();
 
-    // Reset gameplay effects
-    postProcessing.setSobel(false);
+    // Reset gameplay effects.
+    stopSobelEvent();
     postProcessing.setNightVision(false);
     postProcessing.setChromaticAberration(false);
 
-    // Restore corridor lighting
+    // Restore lighting.
     hotel.setCorridorLights(true);
     setLanternVisible(false);
     setNightVision(false);
 
+    // Remove all spawned junction boxes.
+    junctionBoxes.forEach((box) => {
+        box.resetSpawn();
+    });
+
+    junctionBoxes.length = 0;
+    activeJunctionBox = null;
+
+    // Reset objective and progression.
+    activatedBoxCount = 0;
+    powerOutageTriggered = false;
+
+    senseTarget = elevatorDoor;
+    senseTargetName = 'ELEVATOR DOOR';
+
+    // Reset audio.
     soundManager.stopSound('creepy');
 
     soundManager.playSound('ventilation');
@@ -382,32 +401,23 @@ function updateStalkerAudio() {
 
         if (isChasing) {
             // She spotted the player
-            stalkerWhisperId = soundManager.playSound(
-                'stalkerWhisper',
-                {
-                    positional: true,
-                    position: stalkerAudioPosition,
-                }
-            );
+            stalkerWhisperId = soundManager.playSound('stalkerWhisper', {
+                positional: true,
+                position: stalkerAudioPosition,
+            });
 
-            stalkerRunningId = soundManager.playSound(
-                'stalkerRunning',
-                {
-                    positional: true,
-                    position: stalkerAudioPosition,
-                    loop: true,
-                }
-            );
+            stalkerRunningId = soundManager.playSound('stalkerRunning', {
+                positional: true,
+                position: stalkerAudioPosition,
+                loop: true,
+            });
         } else {
             // She is stalking the player
-            stalkerWhispersId = soundManager.playSound(
-                'stalkerWhispers',
-                {
-                    positional: true,
-                    position: stalkerAudioPosition,
-                    loop: true,
-                }
-            );
+            stalkerWhispersId = soundManager.playSound('stalkerWhispers', {
+                positional: true,
+                position: stalkerAudioPosition,
+                loop: true,
+            });
         }
 
         previousStalkerState = currentState;
@@ -415,27 +425,21 @@ function updateStalkerAudio() {
 
     // Keep active sounds attached to the moving Stalker
     if (stalkerWhispersId !== null) {
-        soundManager.sounds.get('stalkerWhispers')
-            .howl.pos(
-                ...stalkerAudioPosition.toArray(),
-                stalkerWhispersId
-            );
+        soundManager.sounds
+            .get('stalkerWhispers')
+            .howl.pos(...stalkerAudioPosition.toArray(), stalkerWhispersId);
     }
 
     if (stalkerWhisperId !== null) {
-        soundManager.sounds.get('stalkerWhisper')
-            .howl.pos(
-                ...stalkerAudioPosition.toArray(),
-                stalkerWhisperId
-            );
+        soundManager.sounds
+            .get('stalkerWhisper')
+            .howl.pos(...stalkerAudioPosition.toArray(), stalkerWhisperId);
     }
 
     if (stalkerRunningId !== null) {
-        soundManager.sounds.get('stalkerRunning')
-            .howl.pos(
-                ...stalkerAudioPosition.toArray(),
-                stalkerRunningId
-            );
+        soundManager.sounds
+            .get('stalkerRunning')
+            .howl.pos(...stalkerAudioPosition.toArray(), stalkerRunningId);
     }
 }
 
@@ -579,11 +583,13 @@ function tick() {
     const wasActivated = activeJunctionBox?.update(camera.position, deltaTime);
 
     if (wasActivated) {
-        soundManager.playSound('junction-on')
+        soundManager.playSound('junction-on');
 
         activatedBoxCount += 1;
 
-        setTimeout(() => {
+        junctionSpawnTimeout = setTimeout(() => {
+            junctionSpawnTimeout = null;
+
             if (activatedBoxCount < maxJunctionBoxes) {
                 spawnNextJunctionBox();
                 return;
