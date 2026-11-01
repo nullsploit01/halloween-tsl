@@ -46,11 +46,17 @@ export class LoadingScreen {
 
         const lowerFog = smoothstep(0.0, 0.9, float(1).sub(screenUV.y));
 
-        const fog = fogMask.mul(lowerFog).mul(0.9);
+        const fog = fogMask
+            .mul(lowerFog)
+            .mul(1.2);
 
-        const baseColor = mix(color('#030203'), color('#28070b'), fog);
+        const baseColor = mix(
+            color('#030203'),
+            color('#3b1018'),
+            fog
+        );
 
-        const redMist = color('#650d17').mul(fog.mul(0.22));
+        const redMist = color('#781522').mul(fog.mul(0.3));
 
         const grainNoise = mx_noise_float(screenUV.mul(900).add(drift.mul(100)), 1, 0);
 
