@@ -77,8 +77,18 @@ soundManager.registerSound('stalkerWhisper', '/sounds/stalker/whisper.mp3', {
     positional: true,
 });
 
+soundManager.registerSound('stalkerWhisper2', '/sounds/stalker/whisper-2.mp3', {
+    volume: 0.5,
+    positional: true,
+});
+
 soundManager.registerSound('stalkerWhispers', '/sounds/stalker/whispers.mp3', {
     volume: 0.2,
+    positional: true,
+});
+
+soundManager.registerSound('stalkerWhispersLoud', '/sounds/stalker/whispers.mp3', {
+    volume: 0.7,
     positional: true,
 });
 

@@ -587,6 +587,22 @@ function tick() {
 
         activatedBoxCount += 1;
 
+        setTimeout(() => {
+            if (activatedBoxCount === 1) {
+                soundManager.playSound('stalkerWhisper2');
+            }
+
+            if (activatedBoxCount === 2) {
+                soundManager.playSound('i-see-you-whisper');
+            }
+            
+            if (activatedBoxCount === 3) {
+                soundManager.playSound('stalkerWhispersLoud');
+            }
+
+            stalker.spawn(hotel, camera.position);
+        }, 400);
+
         junctionSpawnTimeout = setTimeout(() => {
             junctionSpawnTimeout = null;
 
