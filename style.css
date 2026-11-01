@@ -217,7 +217,7 @@ body {
 
     text-align: center;
 
-    transform: translateY(-2vh);
+    transform: none;
 }
 
 .loading-title {
@@ -378,6 +378,56 @@ body {
 
 .loading-enter:disabled {
     cursor: default;
+}
+
+.loading-instructions {
+    width: min(720px, 90vw);
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(190, 130, 130, 0.16);
+}
+
+.instructions-heading {
+    margin-bottom: 18px;
+    text-align: center;
+    color: rgba(190, 155, 155, 0.45);
+    font: 9px monospace;
+    letter-spacing: 4px;
+}
+
+.instructions-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    column-gap: 25px;
+    row-gap: 13px;
+}
+
+.instructions-list > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.instructions-list kbd {
+    color: #c58d8d;
+    font: 600 9px monospace;
+    letter-spacing: 1px;
+}
+
+.instructions-list span {
+    color: rgba(220, 205, 200, 0.58);
+    font: 9px monospace;
+    letter-spacing: 1.2px;
+}
+
+@media (max-width: 600px) {
+    .instructions-list {
+        column-gap: 16px;
+        row-gap: 12px;
+    }
 }
 
 @media (max-width: 600px) {

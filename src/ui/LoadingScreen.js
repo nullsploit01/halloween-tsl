@@ -109,6 +109,20 @@ export class LoadingScreen {
                 <button class="loading-enter" disabled>
                     ENTER IF YOU MUST
                 </button>
+
+                <div class="loading-instructions">
+                    <div class="instructions-heading">CONTROLS</div>
+
+                    <div class="instructions-list">
+                        <div><kbd>W A S D</kbd><span>Move</span></div>
+                        <div><kbd>SHIFT</kbd><span>Run</span></div>
+                        <div><kbd>ALT + SHIFT</kbd><span>Sneak</span></div>
+                        <div><kbd>MOUSE</kbd><span>Look</span></div>
+                        <div><kbd>E</kbd><span>Interact</span></div>
+                        <div><kbd>L</kbd><span>Lantern</span></div>
+                        <div><kbd>N</kbd><span>Night Vision</span></div>
+                    </div>
+                </div>
             </div>
         `;
 
