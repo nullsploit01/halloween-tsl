@@ -82,11 +82,4 @@ soundManager.registerSound('stalkerWhispers', '/sounds/stalker/whispers.mp3', {
     positional: true,
 });
 
-soundManager.setEnvironmentSources([
-    new THREE.Vector3(0, 2, -12),
-    new THREE.Vector3(5, 1.5, -20),
-    new THREE.Vector3(-5, 1.5, -18),
-    new THREE.Vector3(12, 1.5, 0),
-]);
-
 export { soundManager };

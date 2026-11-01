@@ -68,11 +68,16 @@ loadingScreen.setProgress(90, 'SOMETHING IS MOVING...');
 loadingScreen.ready();
 
 let hasGameStarted = false;
+let senseTarget = null;
+let senseTargetName = null;
 
 loadingScreen.onEnter(async () => {
     await Howler.ctx?.resume();
 
     soundManager.playSound('woosh');
+    
+    senseTarget = elevatorDoor
+    senseTargetName = 'ELEVATOR DOOR';
 
     setTimeout(() => {
         loadingScreen.hide();
@@ -186,7 +191,6 @@ function triggerSenseBlur() {
 const junctionBoxes = [];
 const maxJunctionBoxes = 3;
 let activeJunctionBox = null;
-let senseTarget = null;
 
 function spawnNextJunctionBox() {
     if (junctionBoxes.length >= maxJunctionBoxes) return false;
@@ -200,6 +204,7 @@ function spawnNextJunctionBox() {
     junctionBoxes.push(box);
     activeJunctionBox = box;
     senseTarget = box;
+    senseTargetName = 'JUNCTION BOX';
 
     return true;
 }
@@ -564,7 +569,7 @@ function tick() {
         elevatorDoor.spawn(hotel, camera.position, 100);
     }
 
-    cameraHud.updateObjective(camera, senseTarget, senseModeActive);
+    cameraHud.updateObjective(camera, senseTarget, senseModeActive, senseTargetName);
 
     const wasActivated = activeJunctionBox?.update(camera.position, deltaTime);
 
@@ -579,6 +584,7 @@ function tick() {
 
             elevatorDoor.setPowered(true);
             senseTarget = elevatorDoor;
+            senseTargetName = 'ELEVATOR DOOR';
             activeJunctionBox = null;
 
             showSystemMessage('LIFT ACTIVATED — RETURN TO THE ELEVATOR', 'success');
@@ -594,6 +600,7 @@ function tick() {
         respawnPlayer();
     }
 
+    soundManager.update(deltaTime, camera);
     postProcessing.update(deltaTime);
     postProcessing.renderPipeline.render();
 }

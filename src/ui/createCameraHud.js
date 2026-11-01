@@ -21,12 +21,21 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
 
     signal.className = 'objective-signal';
     signal.innerHTML = `
-        <div class="sense-indicator">
-            <span class="objective-signal__arrow">▲</span>
-        </div>
+        <div class="trace">
+            <div class="trace-compass">
+                <span class="trace-arrow">▲</span>
+            </div>
 
-        <span class="objective-signal__label">TRACE</span>
-        <span class="objective-signal__distance">--m</span>
+            <div class="trace-info">
+                <span class="trace-target">ELEVATOR DOOR</span>
+                <span class="trace-direction">AHEAD</span>
+            </div>
+
+            <div class="trace-distance">
+                <span class="trace-distance__value">31</span>
+                <span class="trace-distance__unit">M</span>
+            </div>
+        </div>
     `;
 
     document.body.append(element, signal);
@@ -34,9 +43,10 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
     const clockElement = element.querySelector('.camera-hud__clock');
     const batteryElement = element.querySelector('.camera-hud__battery');
 
-    const signalArrow = signal.querySelector('.objective-signal__arrow');
-    const signalDistance = signal.querySelector('.objective-signal__distance');
-    const signalLabel = signal.querySelector('.objective-signal__label');
+    const signalArrow = signal.querySelector('.trace-arrow');
+    const signalDistance = signal.querySelector('.trace-distance__value');
+    const signalLabel = signal.querySelector('.trace-target');
+    const signalDirection = signal.querySelector('.trace-direction');
 
     const targetPosition = new THREE.Vector3();
     const directionToTarget = new THREE.Vector3();
@@ -46,13 +56,23 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
     let currentBattery = battery;
     let visible = false;
 
-    function updateObjective(camera, junctionBox, isSensing) {
-        if (!isSensing || !junctionBox?.hasSpawned) {
+    function updateObjective(camera, target, isSensing, targetName = 'UNKNOWN') {
+        if (!isSensing || !target) {
             signal.style.display = 'none';
             return;
         }
 
-        junctionBox.group.getWorldPosition(targetPosition);
+        // Supports a THREE.Group directly, or objects containing group/model.
+        const targetObject = target.isObject3D
+            ? target
+            : target.group ?? target.model;
+
+        if (!targetObject || targetObject.visible === false) {
+            signal.style.display = 'none';
+            return;
+        }
+
+        targetObject.getWorldPosition(targetPosition);
 
         directionToTarget.subVectors(targetPosition, camera.position);
         directionToTarget.y = 0;
@@ -73,9 +93,11 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
         directionToTarget.normalize();
 
         const angle = Math.atan2(
-            cameraForward.x * directionToTarget.z - cameraForward.z * directionToTarget.x,
+            cameraForward.x * directionToTarget.z -
+                cameraForward.z * directionToTarget.x,
 
-            cameraForward.x * directionToTarget.x + cameraForward.z * directionToTarget.z,
+            cameraForward.x * directionToTarget.x +
+                cameraForward.z * directionToTarget.z
         );
 
         const absoluteAngle = Math.abs(angle);
@@ -90,13 +112,17 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
             relativeDirection = 'LEFT';
         }
 
-        signalLabel.textContent = `TRACE // ${relativeDirection}`;
+        signalLabel.textContent = targetName.toUpperCase();
+        signalDirection.textContent = relativeDirection;
+        signalDistance.textContent = Math.ceil(distance);
 
-        const signalStrength = THREE.MathUtils.clamp(1 - (distance - 5) / (100 - 5), 0.15, 1);
+        const signalStrength = THREE.MathUtils.clamp(
+            1 - (distance - 5) / (100 - 5),
+            0.15,
+            1
+        );
 
-        signalArrow.style.transform = `rotate(${angle}rad) scale(${0.8 + signalStrength * 0.35})`;
-
-        signalDistance.textContent = `${Math.ceil(distance)}m`;
+        signalArrow.style.transform = `rotate(${angle}rad)`;
 
         signal.style.opacity = signalStrength;
         signal.style.setProperty('--signal-strength', signalStrength);
