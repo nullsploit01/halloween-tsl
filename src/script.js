@@ -294,6 +294,8 @@ function updateInteractionHint() {
     interactionHint.classList.toggle('is-visible', text !== '');
 }
 
+let stopPlayerMovements = false;
+
 function handleInteraction() {
     soundManager.playSound('junction-press');
     const startedBox = activeJunctionBox?.beginActivation(camera.position);
@@ -313,6 +315,17 @@ function handleInteraction() {
 
         const spawned = spawnNextJunctionBox();
         return;
+    }
+
+    if (elevatorMessage === 'ELEVATOR CALLED') {
+        soundManager.stopSound('stalkerWhispersLoud');
+        
+        setTimeout(() => {
+            soundManager.playSound('look-behind-you-loud');
+        }, 200)
+
+        soundManager.playSound('heavyFootsteps')
+        stopPlayerMovements = true;
     }
 
     showSystemMessage(elevatorMessage, 'info');
@@ -513,7 +526,7 @@ function tick() {
     const right = new THREE.Vector3();
     const movement = new THREE.Vector3();
 
-    if (controls.isLocked) {
+    if (controls.isLocked && !stopPlayerMovements) {
         movement.set(0, 0, 0);
 
         camera.getWorldDirection(forward);

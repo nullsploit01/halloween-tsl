@@ -39,6 +39,10 @@ soundManager.registerSound('look-behind-you', '/sounds/environment/look-behind-y
     cooldown: 45,
 });
 
+soundManager.registerSound('look-behind-you-loud', '/sounds/environment/look-behind-you.mp3', {
+    volume: 0.75,
+});
+
 soundManager.registerSound('i-see-you-whisper', '/sounds/environment/i-see-you-whisper.mp3', {
     volume: 0.2,
     positional: true,
@@ -59,6 +63,11 @@ soundManager.registerSound('walking', '/sounds/footsteps/walking.mp3', {
 
 soundManager.registerSound('running', '/sounds/footsteps/running.mp3', {
     volume: 0.2,
+    positional: false,
+});
+
+soundManager.registerSound('heavyFootsteps', '/sounds/footsteps/heavy.mp3', {
+    volume: 0.7,
     positional: false,
 });
 
