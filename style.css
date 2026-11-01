@@ -520,7 +520,7 @@ body {
 
 .camera-hud__bottom {
     position: absolute;
-    right: 34px;
+    left: 34px;
     bottom: 34px;
 }
 
@@ -538,6 +538,93 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.game-controls-hud {
+    position: fixed;
+    right: 38px;
+    bottom: 32px;
+    z-index: 1000;
+
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 13px;
+
+    width: 265px;
+    padding: 8px 4px;
+
+    background: transparent;
+    border: none;
+
+    font-family: monospace;
+    font-size: 12px;
+    letter-spacing: 1.2px;
+
+    opacity: 0.7;
+    color: rgba(220, 210, 205, 0.8);
+
+    pointer-events: none;
+    user-select: none;
+    transition: opacity 0.3s ease;
+}
+
+.game-controls-hud:hover {
+    opacity: 0.95;
+}
+
+.game-controls-heading {
+    margin-bottom: 7px;
+    color: rgba(190, 115, 115, 0.7);
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-align: right;
+}
+
+.game-control {
+    display: grid;
+    grid-template-columns: 105px 1fr;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+}
+
+.game-control kbd,
+.mute-key {
+    padding: 0;
+    border: none;
+    background: transparent;
+
+    color: rgba(195, 125, 125, 0.9);
+    font: 600 11px monospace;
+    letter-spacing: 1.5px;
+    text-align: right;
+}
+
+.game-control span {
+    color: rgba(215, 205, 200, 0.75);
+    font-size: 11px;
+    letter-spacing: 1.3px;
+    text-align: right;
+}
+
+.game-control--mute {
+    margin-top: 5px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(180, 100, 100, 0.22);
+    pointer-events: auto;
+}
+
+.mute-key {
+    cursor: pointer;
+}
+
+.mute-key:hover {
+    color: #e5aaaa;
+}
+
+.mute-key.is-muted {
+    color: #e65c5c;
 }
 
 /* G — Sobel Sense HUD */

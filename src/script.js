@@ -15,6 +15,7 @@ import { Howler } from 'howler';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { ClusteredLighting } from 'three/examples/jsm/lighting/ClusteredLighting.js';
 import * as THREE from 'three/webgpu';
+import { createControlsHud } from './ui/createControlsHud.js';
 
 const canvas = document.querySelector('canvas.threejs');
 
@@ -22,6 +23,7 @@ const sizes = new Sizes();
 const scene = createScene();
 const camera = createCamera(sizes);
 const cameraHud = createCameraHud();
+const controlsHud = createControlsHud(soundManager);
 
 // Player height, rather than the former scene-preview camera position.
 camera.position.set(0, 1.7, 0);
@@ -89,6 +91,7 @@ loadingScreen.onEnter(async () => {
     }, 700);
 
     hasGameStarted = true;
+    controlsHud.setVisible(true);
     controls.lock();
 });
 
@@ -449,7 +452,7 @@ window.addEventListener('keydown', (event) => {
         setNightVision(nextNightVisionState);
     }
 
-    if (event.code === 'KeyG') {
+    if (event.code === 'KeyF') {
         // Sobel event always exits night vision first.
         setNightVision(false);
 

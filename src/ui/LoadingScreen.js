@@ -119,6 +119,7 @@ export class LoadingScreen {
                         <div><kbd>ALT + SHIFT</kbd><span>Sneak</span></div>
                         <div><kbd>MOUSE</kbd><span>Look</span></div>
                         <div><kbd>E</kbd><span>Interact</span></div>
+                        <div><kbd>F</kbd><span>Focus</span></div>
                         <div><kbd>L</kbd><span>Lantern</span></div>
                         <div><kbd>N</kbd><span>Night Vision</span></div>
                     </div>
