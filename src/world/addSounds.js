@@ -82,4 +82,14 @@ soundManager.registerSound('stalkerWhispers', '/sounds/stalker/whispers.mp3', {
     positional: true,
 });
 
+soundManager.registerSound('junction-on', '/sounds/general/junction-on.mp3', {
+    volume: 0.4,
+    positional: false,
+});
+
+soundManager.registerSound('junction-press', '/sounds/general/junction-press.mp3', {
+    volume: 0.4,
+    positional: false,
+});
+
 export { soundManager };

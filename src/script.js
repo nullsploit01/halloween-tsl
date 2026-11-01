@@ -294,9 +294,11 @@ function updateInteractionHint() {
 }
 
 function handleInteraction() {
+    soundManager.playSound('junction-press');
     const startedBox = activeJunctionBox?.beginActivation(camera.position);
-
-    if (startedBox) return;
+    if (startedBox) {
+        return
+    };
 
     const elevatorMessage = elevatorDoor.call(camera.position);
 
@@ -577,6 +579,8 @@ function tick() {
     const wasActivated = activeJunctionBox?.update(camera.position, deltaTime);
 
     if (wasActivated) {
+        soundManager.playSound('junction-on')
+
         activatedBoxCount += 1;
 
         setTimeout(() => {
