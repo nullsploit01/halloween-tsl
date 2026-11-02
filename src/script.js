@@ -6,6 +6,7 @@ import { addLighting } from './core/lighting.js';
 import { Sizes } from './core/Sizes.js';
 import { createCameraHud } from './ui/createCameraHud.js';
 import { createControlsHud } from './ui/createControlsHud.js';
+import { GameOverScreen } from './ui/GameOverScreen.js';
 import { LoadingScreen } from './ui/LoadingScreen.js';
 import { soundManager } from './world/addSounds.js';
 import { addWorld } from './world/addWorld.js';
@@ -16,6 +17,9 @@ import { Howler } from 'howler';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { ClusteredLighting } from 'three/examples/jsm/lighting/ClusteredLighting.js';
 import * as THREE from 'three/webgpu';
+
+const gameOverScreen = new GameOverScreen();
+let hasGameEnded = false;
 
 const canvas = document.querySelector('canvas.threejs');
 
@@ -46,13 +50,10 @@ const postProcessing = createPostProcessing({
 
 const { ambientLight } = addLighting({ scene, renderer });
 
-const { lantern, hotel, lanternLight, ghost, setLanternVisible, nightVisionCamera } = await addWorld(
-    scene,
-    camera,
-    (progress, message) => {
+const { lantern, hotel, lanternLight, ghost, setLanternVisible, nightVisionCamera } =
+    await addWorld(scene, camera, (progress, message) => {
         loadingScreen.setProgress(progress, message);
-    },
-);
+    });
 
 let activatedBoxCount = 0;
 const elevatorDoor = new ElevatorDoor(scene);
@@ -97,7 +98,7 @@ loadingScreen.onEnter(async () => {
 });
 
 window.addEventListener('click', () => {
-    if (!hasGameStarted) return;
+    if (!hasGameStarted || hasGameEnded) return;
     controls.lock();
 });
 
@@ -322,14 +323,17 @@ function handleInteraction() {
 
         setTimeout(() => {
             soundManager.playSound('look-behind-you-loud');
-        }, 200)
+        }, 200);
 
         setTimeout(() => {
             showSystemMessage('LOOK BEHIND YOU', 'error');
-            ghost.trigger(camera.position, elevatorDoor.group.getWorldPosition(new THREE.Vector3()));
-        }, 1000)
+            ghost.trigger(
+                camera.position,
+                elevatorDoor.group.getWorldPosition(new THREE.Vector3()),
+            );
+        }, 1000);
 
-        soundManager.playSound('heavyFootsteps')
+        soundManager.playSound('heavyFootsteps');
         stopPlayerMovements = true;
     }
 
@@ -461,6 +465,21 @@ function updateStalkerAudio() {
             .get('stalkerRunning')
             .howl.pos(...stalkerAudioPosition.toArray(), stalkerRunningId);
     }
+}
+
+function processGameOver() {
+    if (!hasGameStarted) return;
+
+    hasGameEnded = true;
+
+    controls.unlock();
+    keys.clear();
+
+    controlsHud.setVisible(false);
+
+    soundManager.stopAll();
+
+    gameOverScreen.show();
 }
 
 window.addEventListener('keydown', (event) => {
@@ -615,7 +634,7 @@ function tick() {
             if (activatedBoxCount === 2) {
                 soundManager.playSound('i-see-you-whisper');
             }
-            
+
             if (activatedBoxCount === 3) {
                 soundManager.playSound('stalkerWhispersLoud');
             }
@@ -649,10 +668,12 @@ function tick() {
         respawnPlayer();
     }
 
-    const ghostCaught = ghost.update(
-        camera.position,
-        deltaTime
-    );
+    const ghostCaught = ghost.update(camera.position, deltaTime);
+
+    if (ghostCaught && !hasGameEnded) {
+        processGameOver();
+        return;
+    }
 
     soundManager.update(deltaTime, camera);
     postProcessing.update(deltaTime);

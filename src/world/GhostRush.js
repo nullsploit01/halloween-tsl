@@ -1,17 +1,19 @@
-
-import * as THREE from 'three/webgpu';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as THREE from 'three/webgpu';
 
 export class GhostRush {
-    constructor(scene, {
-        modelPath = '/models/creep.glb',
-        speed = 24,
-        spawnDistance = 30,
-        attackDistance = 1.5,
-        modelScale = 1,
-        heightOffset = 1.25,
-        rotationOffset = 0,
-    } = {}) {
+    constructor(
+        scene,
+        {
+            modelPath = '/models/creep.glb',
+            speed = 24,
+            spawnDistance = 30,
+            attackDistance = 1.5,
+            modelScale = 1,
+            heightOffset = 1.25,
+            rotationOffset = 0,
+        } = {},
+    ) {
         this.scene = scene;
         this.loader = new GLTFLoader();
 
@@ -62,16 +64,13 @@ export class GhostRush {
             });
 
             this.mixer = new THREE.AnimationMixer(this.model);
-            const creepyClip = THREE.AnimationClip.findByName(
-                gltf.animations,
-                'creepy'
-            );
+            const creepyClip = THREE.AnimationClip.findByName(gltf.animations, 'creepy');
 
             if (creepyClip) {
                 this.runAction = this.mixer.clipAction(creepyClip);
                 this.runAction.setLoop(THREE.LoopRepeat, Infinity);
                 this.runAction.play();
-            } 
+            }
 
             this.isLoaded = true;
             console.log('Ghost rush model loaded.');
@@ -81,46 +80,40 @@ export class GhostRush {
     }
 
     trigger(playerPosition, elevatorPosition) {
-    if (!this.isLoaded || this.isActive || this.hasAttacked) {
-        return false;
+        if (!this.isLoaded || this.isActive || this.hasAttacked) {
+            return false;
+        }
+
+        // Direction from elevator to player.
+        this.direction.subVectors(playerPosition, elevatorPosition);
+
+        this.direction.y = 0;
+
+        if (this.direction.lengthSq() < 0.001) {
+            return false;
+        }
+
+        this.direction.normalize();
+
+        // Spawn beyond the player, away from the elevator.
+        this.spawnPosition.copy(playerPosition);
+        this.spawnPosition.addScaledVector(this.direction, this.spawnDistance);
+
+        this.spawnPosition.y = playerPosition.y - this.heightOffset;
+
+        this.group.position.copy(this.spawnPosition);
+        this.group.visible = true;
+
+        this.isActive = true;
+        this.hasAttacked = false;
+
+        if (this.runAction) {
+            this.runAction.reset();
+            this.runAction.play();
+        }
+
+        return true;
     }
-
-    // Direction from elevator to player.
-    this.direction.subVectors(
-        playerPosition,
-        elevatorPosition
-    );
-
-    this.direction.y = 0;
-
-    if (this.direction.lengthSq() < 0.001) {
-        return false;
-    }
-
-    this.direction.normalize();
-
-    // Spawn beyond the player, away from the elevator.
-    this.spawnPosition.copy(playerPosition);
-    this.spawnPosition.addScaledVector(
-        this.direction,
-        this.spawnDistance
-    );
-
-    this.spawnPosition.y = playerPosition.y - this.heightOffset;
-
-    this.group.position.copy(this.spawnPosition);
-    this.group.visible = true;
-
-    this.isActive = true;
-    this.hasAttacked = false;
-
-    if (this.runAction) {
-        this.runAction.reset();
-        this.runAction.play();
-    }
-
-    return true;
-}
 
     update(playerPosition, deltaTime) {
         if (!this.isActive) return false;
@@ -129,10 +122,7 @@ export class GhostRush {
         this.target.copy(playerPosition);
         this.target.y = playerPosition.y - this.heightOffset;
 
-        this.direction.subVectors(
-            this.target,
-            this.group.position
-        );
+        this.direction.subVectors(this.target, this.group.position);
 
         const distance = this.direction.length();
 
@@ -149,43 +139,30 @@ export class GhostRush {
 
         // Face the player.
         this.group.rotation.y =
-            Math.atan2(this.direction.x, this.direction.z) +
-            Math.PI +
-            this.rotationOffset;
+            Math.atan2(this.direction.x, this.direction.z) + Math.PI + this.rotationOffset;
 
         // Rush at full speed.
-                // Speed based on distance from the player.
-let currentSpeed;
+        // Speed based on distance from the player.
+        let currentSpeed;
 
-if (distance > 10) {
-    // Slow initial approach.
-    currentSpeed = 5;
-} else if (distance > 3) {
-    // Gradually accelerate.
-    const progress = 1 - (distance - 3) / 7;
+        if (distance > 10) {
+            // Slow initial approach.
+            currentSpeed = 5;
+        } else if (distance > 3) {
+            // Gradually accelerate.
+            const progress = 1 - (distance - 3) / 7;
 
-    currentSpeed = THREE.MathUtils.lerp(
-        5,
-        24,
-        progress
-    );
-} else {
-    // Extremely slow movement near the camera.
-    const progress = distance / 3;
+            currentSpeed = THREE.MathUtils.lerp(5, 24, progress);
+        } else {
+            // Extremely slow movement near the camera.
+            const progress = distance / 3;
 
-    currentSpeed = THREE.MathUtils.lerp(
-        0.5,
-        3,
-        progress
-    );
-}
+            currentSpeed = THREE.MathUtils.lerp(0.5, 3, progress);
+        }
 
-const step = Math.min(currentSpeed * deltaTime, distance);
+        const step = Math.min(currentSpeed * deltaTime, distance);
 
-this.group.position.addScaledVector(
-    this.direction,
-    step
-);
+        this.group.position.addScaledVector(this.direction, step);
 
         // Update animation.
         this.mixer?.update(deltaTime);

@@ -201,10 +201,8 @@ export class ElevatorDoor {
     }
 
     getFacingDirection(target = new THREE.Vector3()) {
-    this.group.updateWorldMatrix(true, false);
+        this.group.updateWorldMatrix(true, false);
 
-    return this.group
-        .getWorldDirection(target)
-        .normalize();
-}
+        return this.group.getWorldDirection(target).normalize();
+    }
 }

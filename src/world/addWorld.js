@@ -1,10 +1,10 @@
 import { createStartingRoom } from './createStartingRoom.js';
+import { GhostRush } from './GhostRush.js';
 import { Hotel } from './Hotel.js';
 import { JunctionBox } from './JunctionBox.js';
 import { addLantern } from './lantern';
 import { addNightVisionCamera } from './nightVisionCamera.js';
 import { WallCollisions } from './WallCollisions.js';
-import { GhostRush } from './GhostRush.js';
 
 export const addWorld = async (scene, camera, onProgress = () => {}) => {
     const wallCollisions = new WallCollisions();
