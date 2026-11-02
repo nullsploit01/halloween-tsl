@@ -18,6 +18,10 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { ClusteredLighting } from 'three/examples/jsm/lighting/ClusteredLighting.js';
 import * as THREE from 'three/webgpu';
 
+const NIGHT_VISION_BATTERY_MAX = 100;
+const NIGHT_VISION_DRAIN_RATE = 3; // Battery percentage per second
+
+
 const gameOverScreen = new GameOverScreen();
 let hasGameEnded = false;
 
@@ -26,7 +30,7 @@ const canvas = document.querySelector('canvas.threejs');
 const sizes = new Sizes();
 const scene = createScene();
 const camera = createCamera(sizes);
-const cameraHud = createCameraHud();
+const cameraHud = createCameraHud({battery: NIGHT_VISION_BATTERY_MAX, batteryDrainPerSecond: NIGHT_VISION_DRAIN_RATE});
 const controlsHud = createControlsHud(soundManager);
 
 // Player height, rather than the former scene-preview camera position.
@@ -120,6 +124,8 @@ nightVisionLight.target.position.set(0, 0, -10);
 camera.add(nightVisionLight.target);
 
 let nightVisionEnabled = false;
+
+let nightVisionBattery = NIGHT_VISION_BATTERY_MAX;
 
 const normalAmbientIntensity = ambientLight.intensity;
 let ambientStartTimeout;
@@ -363,6 +369,7 @@ function respawnPlayer() {
     setNightVision(false);
 
     ghost.reset();
+    nightVisionBattery = NIGHT_VISION_BATTERY_MAX;
 
     // Remove all spawned junction boxes.
     junctionBoxes.forEach((box) => {
@@ -486,16 +493,24 @@ window.addEventListener('keydown', (event) => {
     if (event.repeat || !hasGameStarted) return;
 
     if (event.code === 'KeyN') {
-        if (nightVisionTransitioning) return;
+    if (nightVisionTransitioning) return;
 
-        const nextNightVisionState = !nightVisionEnabled;
+    const nextNightVisionState = !nightVisionEnabled;
 
-        if (nextNightVisionState) {
-            stopSobelEvent();
+    if (nextNightVisionState) {
+        if (nightVisionBattery <= 0) {
+            showSystemMessage(
+                'BATTERY DEPLETED — NIGHT VISION UNAVAILABLE',
+                'warning'
+            );
+            return;
         }
 
-        setNightVision(nextNightVisionState);
+        stopSobelEvent();
     }
+
+    setNightVision(nextNightVisionState);
+}
 
     if (event.code === 'KeyF') {
         // Sobel event always exits night vision first.
@@ -606,6 +621,23 @@ function tick() {
             currentFootstepId = null;
         }
     }
+
+    if (nightVisionEnabled) {
+    nightVisionBattery = Math.max(
+        0,
+        nightVisionBattery - NIGHT_VISION_DRAIN_RATE * deltaTime
+    );
+
+    if (nightVisionBattery <= 0) {
+        setNightVision(false);
+
+        showSystemMessage(
+            'BATTERY DEPLETED — NIGHT VISION DISABLED',
+            'warning',
+            3500
+        );
+    }
+}
 
     cameraHud.update(deltaTime);
 
