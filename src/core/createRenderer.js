@@ -13,8 +13,6 @@ export async function createRenderer(canvas, sizes) {
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(sizes.pixelRatio);
     renderer.setClearColor(0x000000);
-
-    renderer.inspector = new Inspector();
     await renderer.init();
     return renderer;
 }

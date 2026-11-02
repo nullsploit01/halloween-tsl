@@ -36,12 +36,18 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
                 <span class="trace-distance__unit">M</span>
             </div>
         </div>
+
+         <div class="trace-objective">
+            <span class="trace-objective__label">CURRENT OBJECTIVE</span>
+            <span class="trace-objective__text">FIND THE ELEVATOR</span>
+        </div>
     `;
 
     document.body.append(element, signal);
 
     const clockElement = element.querySelector('.camera-hud__clock');
     const batteryElement = element.querySelector('.camera-hud__battery');
+    const objectiveElement = signal.querySelector('.trace-objective__text');
 
     const signalArrow = signal.querySelector('.trace-arrow');
     const signalDistance = signal.querySelector('.trace-distance__value');
@@ -149,6 +155,10 @@ export function createCameraHud({ battery = 100, batteryDrainPerSecond = 0.4 } =
 
         get battery() {
             return currentBattery;
+        },
+
+        setObjective(text) {
+            objectiveElement.textContent = text.toUpperCase();
         },
     };
 }

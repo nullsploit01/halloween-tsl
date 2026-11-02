@@ -87,6 +87,8 @@ loadingScreen.onEnter(async () => {
     senseTarget = elevatorDoor;
     senseTargetName = 'ELEVATOR DOOR';
 
+    cameraHud.setObjective('FIND THE ELEVATOR');
+
     setTimeout(() => {
         loadingScreen.hide();
     }, 400);
@@ -216,6 +218,8 @@ function spawnNextJunctionBox() {
     activeJunctionBox = box;
     senseTarget = box;
     senseTargetName = 'JUNCTION BOX';
+
+    cameraHud.setObjective('ACTIVATE JUNCTION BOXES ' + junctionBoxes.length + '/' + maxJunctionBoxes);
 
     return true;
 }
@@ -385,6 +389,8 @@ function respawnPlayer() {
 
     senseTarget = elevatorDoor;
     senseTargetName = 'ELEVATOR DOOR';
+
+    cameraHud.setObjective('FIND THE ELEVATOR');
 
     // Reset audio.
     soundManager.stopSound('creepy');
@@ -685,6 +691,8 @@ function tick() {
             elevatorDoor.setPowered(true);
             senseTarget = elevatorDoor;
             senseTargetName = 'ELEVATOR DOOR';
+
+            cameraHud.setObjective('FIND THE ELEVATOR');
             activeJunctionBox = null;
 
             showSystemMessage('LIFT ACTIVATED — RETURN TO THE ELEVATOR', 'success');

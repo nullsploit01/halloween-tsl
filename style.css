@@ -970,6 +970,42 @@ body {
     right: -5px;
 }
 
+.trace-objective {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    margin-top: 35px;
+    padding: 12px 12px 0;
+
+    border-top: 1px solid rgba(145, 155, 135, 0.16);
+    border-left: 2px solid rgba(115, 145, 110, 0.22);
+
+    background: transparent;
+    text-align: center;
+}
+
+.trace-objective__label {
+    color: rgba(145, 155, 135, 0.4);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.trace-objective__text {
+    color: rgba(175, 185, 165, 0.65);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    line-height: 1.5;
+    text-transform: uppercase;
+    text-shadow: none;
+}
+
 .objective-signal__arrow {
     position: absolute;
     top: 9px;

@@ -11,16 +11,5 @@ export function addLighting({ scene, renderer }) {
     const ambientLight = new THREE.AmbientLight(0x56616b, 0.22);
 
     scene.add(directionalLight, ambientLight);
-
-    const lightsGui = renderer.inspector.createParameters('Lights').close();
-
-    lightsGui.addColor(directionalLight, 'color').name('directionalColor');
-
-    lightsGui.add(directionalLight, 'intensity', 0, 3, 0.01).name('directionalIntensity');
-
-    lightsGui.addColor(ambientLight, 'color').name('ambientColor');
-
-    lightsGui.add(ambientLight, 'intensity', 0, 1, 0.01).name('ambientIntensity');
-
     return { directionalLight, ambientLight };
 }
