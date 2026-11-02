@@ -58,9 +58,7 @@ export class GameOverScreen {
                 <div class="credits-content">
 
                     <div class="credits-label">LORN / CREDITS</div>
-
                     <h2>CREDITS</h2>
-
                     <div class="ending-line"></div>
 
                     <div class="credits-role">GAME DESIGN & DEVELOPMENT</div>
@@ -70,6 +68,62 @@ export class GameOverScreen {
                         Thank you for playing.<br>
                         Some places are better left unexplored.
                     </p>
+
+                    <div class="credits-divider"></div>
+
+                    <div class="credits-role">3D MODELS</div>
+
+                    <div class="credit-item">
+                        <a href="https://skfb.ly/6WoNX" target="_blank" rel="noopener noreferrer">
+                            Lantern
+                        </a>
+                        <span>by Mandrake</span>
+                        <small>CC BY 4.0</small>
+                    </div>
+
+                    <div class="credit-item">
+                        <a href="https://skfb.ly/opDuK" target="_blank" rel="noopener noreferrer">
+                            EVIL NUN DEADLE NIGHTMARE MOD
+                        </a>
+                        <span>by Dark Phantom Thunderball</span>
+                        <small>CC BY 4.0</small>
+                    </div>
+
+                    <div class="credit-item">
+                        <a href="https://skfb.ly/pH8x6" target="_blank" rel="noopener noreferrer">
+                            Creep
+                        </a>
+                        <span>by 🌎 Ꮆㄒ🌎 🌿</span>
+                        <small>CC BY 4.0</small>
+                    </div>
+
+                    <div class="credit-item">
+                        <a href="https://skfb.ly/oSVY8" target="_blank" rel="noopener noreferrer">
+                            Outlast Camera
+                        </a>
+                        <span>by ~Drift~</span>
+                        <small>CC BY 4.0</small>
+                    </div>
+
+                    <div class="credits-divider"></div>
+
+                    <div class="credits-role">TEXTURES</div>
+                    <div class="credit-item">
+                        <a href="https://polyhaven.com/textures" target="_blank" rel="noopener noreferrer">
+                            Poly Haven
+                        </a>
+                        <span>Texture assets</span>
+                    </div>
+
+                    <div class="credits-divider"></div>
+
+                    <div class="credits-role">SOUND EFFECTS</div>
+                    <div class="credit-item">
+                        <a href="https://pixabay.com/" target="_blank" rel="noopener noreferrer">
+                            Pixabay
+                        </a>
+                        <span>Sound assets</span>
+                    </div>
 
                     <button class="credits-close" type="button">
                         BACK

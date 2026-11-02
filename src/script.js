@@ -498,6 +498,11 @@ function processGameOver() {
 window.addEventListener('keydown', (event) => {
     if (event.repeat || !hasGameStarted) return;
 
+    if (event.code === 'KeyU') {
+        processGameOver()
+    }
+
+
     if (event.code === 'KeyN') {
     if (nightVisionTransitioning) return;
 
