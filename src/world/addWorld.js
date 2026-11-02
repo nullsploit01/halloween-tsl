@@ -4,6 +4,7 @@ import { JunctionBox } from './JunctionBox.js';
 import { addLantern } from './lantern';
 import { addNightVisionCamera } from './nightVisionCamera.js';
 import { WallCollisions } from './WallCollisions.js';
+import { GhostRush } from './GhostRush.js';
 
 export const addWorld = async (scene, camera, onProgress = () => {}) => {
     const wallCollisions = new WallCollisions();
@@ -18,6 +19,15 @@ export const addWorld = async (scene, camera, onProgress = () => {}) => {
     ]);
 
     onProgress(20, 'LOADING HOTEL STRUCTURE...');
+
+    const ghostRush = new GhostRush(scene, {
+        speed: 24,
+        spawnDistance: 30,
+        attackDistance: 1.5,
+        modelScale: 1,
+    });
+
+    await ghostRush.laodpromise;
 
     const hotel = new Hotel(scene, {
         hallwayWidth: 4,
@@ -55,6 +65,7 @@ export const addWorld = async (scene, camera, onProgress = () => {}) => {
         hotel,
         junctionBox,
         nightVisionCamera,
+        ghost: ghostRush,
         lantern: lantern.lantern,
         lanternLight: lantern.lanternLight,
         setLanternVisible: lantern.setVisible,

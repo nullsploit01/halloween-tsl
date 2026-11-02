@@ -46,7 +46,7 @@ const postProcessing = createPostProcessing({
 
 const { ambientLight } = addLighting({ scene, renderer });
 
-const { lantern, hotel, lanternLight, setLanternVisible, nightVisionCamera } = await addWorld(
+const { lantern, hotel, lanternLight, ghost, setLanternVisible, nightVisionCamera } = await addWorld(
     scene,
     camera,
     (progress, message) => {
@@ -319,10 +319,15 @@ function handleInteraction() {
 
     if (elevatorMessage === 'ELEVATOR CALLED') {
         soundManager.stopSound('stalkerWhispersLoud');
-        
+
         setTimeout(() => {
             soundManager.playSound('look-behind-you-loud');
         }, 200)
+
+        setTimeout(() => {
+            showSystemMessage('LOOK BEHIND YOU', 'error');
+            ghost.trigger(camera.position, elevatorDoor.group.getWorldPosition(new THREE.Vector3()));
+        }, 1000)
 
         soundManager.playSound('heavyFootsteps')
         stopPlayerMovements = true;
@@ -352,6 +357,8 @@ function respawnPlayer() {
     hotel.setCorridorLights(true);
     setLanternVisible(false);
     setNightVision(false);
+
+    ghost.reset();
 
     // Remove all spawned junction boxes.
     junctionBoxes.forEach((box) => {
@@ -457,7 +464,7 @@ function updateStalkerAudio() {
 }
 
 window.addEventListener('keydown', (event) => {
-    if (event.repeat) return;
+    if (event.repeat || !hasGameStarted) return;
 
     if (event.code === 'KeyN') {
         if (nightVisionTransitioning) return;
@@ -641,6 +648,11 @@ function tick() {
     if (playerWasCaught) {
         respawnPlayer();
     }
+
+    const ghostCaught = ghost.update(
+        camera.position,
+        deltaTime
+    );
 
     soundManager.update(deltaTime, camera);
     postProcessing.update(deltaTime);

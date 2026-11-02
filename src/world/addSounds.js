@@ -97,7 +97,7 @@ soundManager.registerSound('stalkerWhispers', '/sounds/stalker/whispers.mp3', {
 });
 
 soundManager.registerSound('stalkerWhispersLoud', '/sounds/stalker/whispers.mp3', {
-    volume: 0.7,
+    volume: 0.4,
     positional: true,
 });
 
